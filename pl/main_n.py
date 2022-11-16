@@ -8,7 +8,7 @@ import argparse
 import re
 from transformers import TrainingArguments
 
-from data import *
+from data_n import *
 from model import * 
 
 time_ = datetime.now() + timedelta(hours=9)
@@ -54,49 +54,22 @@ if __name__ == '__main__':
     earlystopping = EarlyStopping(monitor='val_loss', patience=2, mode='min')
     
     # dataloader와 model을 생성합니다.
-    dataloader = Dataloader(cfg.model.model_name, cfg.train.batch_size, cfg.data.shuffle, cfg.path.train_path, cfg.path.dev_path,
-                            cfg.path.test_path, cfg.path.predict_path)
+    dataloader = Dataloader(cfg.model.model_name, cfg.train.batch_size, cfg.data.shuffle, cfg.path.train_path,
+                            cfg.path.test_path, cfg.train.seed)
     model = Model(cfg)
 
-    training_args = TrainingArguments(
-        output_dir='./results',          # output directory
-        save_total_limit=5,              # number of total save model.
-        save_steps=500,                 # model saving step.
-        num_train_epochs=20,              # total number of training epochs
-        learning_rate=5e-5,               # learning_rate
-        per_device_train_batch_size=16,  # batch size per device during training
-        per_device_eval_batch_size=16,   # batch size for evaluation
-        warmup_steps=500,                # number of warmup steps for learning rate scheduler
-        weight_decay=0.01,               # strength of weight decay
-        logging_dir='./logs',            # directory for storing logs
-        logging_steps=100,              # log saving step.
-        evaluation_strategy='steps', # evaluation strategy to adopt during training
-                                    # `no`: No evaluation during training.
-                                    # `steps`: Evaluate every `eval_steps`.
-                                    # `epoch`: Evaluate every end of epoch.
-        eval_steps = 500,            # evaluation step.
-        load_best_model_at_end = True 
-    )
+    # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
+    trainer = pl.Trainer(
+        gpus=1, 
+        max_epochs=cfg.train.max_epoch, 
+        log_every_n_steps=cfg.train.logging_step,
+        logger=wandb_logger,    # W&B integration
+        callbacks = [checkpoint_callback, earlystopping]
+        )
 
-    results = []
-    nums_folds = cfg.nums_folds
-    split_seed = cfg.split_seed
-
-    for k in range(nums_folds):
-        datamodule = Dataloader(cfg.model.model_name, cfg.train.batch_size, cfg.data.shuffle, cfg.path.train_path,
-                            cfg.path.test_path, k=k, split_seed=split_seed, num_splits=nums_folds)
-        datamodule.setup()
-        trainer = pl.Trainer(
-            gpus=1,
-            args=training_args,
-            logger=wandb_logger,
-            callbacks=[checkpoint_callback,earlystopping],
-            compute_metrics=compute_metrics
-            )
-        trainer.fit(model=model, datamodule=datamodule)
-        score = trainer.test(model=model, datamodule=datamodule)
-
-        results.extend(score)
+    # Train part
+    trainer.fit(model=model, datamodule=dataloader)
+    trainer.test(model=model, datamodule=dataloader)
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = 'output'

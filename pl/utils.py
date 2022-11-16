@@ -42,7 +42,7 @@ def tokenized_dataset(dataset, tokenizer):
 
 def label_to_num(label):
     num_label = []
-    with open('dict_label_to_num.pkl', 'rb') as f:
+    with open('/opt/ml/code/dict_label_to_num.pkl', 'rb') as f:
         dict_label_to_num = pickle.load(f)
     for v in label:
         num_label.append(dict_label_to_num[v])
@@ -94,4 +94,19 @@ def compute_metrics(pred):
         'micro f1 score': f1,
         'auprc' : auprc,
         'accuracy': acc,
-  }    
+  }
+
+def n_compute_metrics(logits,y):
+    """ refactoring된 코드를 위한 compute_metrics"""    
+    pred = logits.argmax(-1)
+    prob = logits
+    # calculate accuracy using sklearn's function
+    f1 = klue_re_micro_f1(pred, y)
+    auprc = klue_re_auprc(prob, y)
+    acc = accuracy_score(y, pred) # 리더보드 평가에는 포함되지 않습니다.
+
+    return {
+        'micro f1 score': f1,
+        'auprc' : auprc,
+        'accuracy': acc,
+    }
