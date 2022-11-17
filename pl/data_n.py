@@ -16,14 +16,15 @@ class Dataset(torch.utils.data.Dataset):
 
     def __getitem__(self,idx):
         item = {key: val[idx].clone().detach() for key, val in self.pair_dataset.items()}
-        item['labels'] = torch.tensor(self.labels[idx])
-        return item
+        #item['labels'] = torch.tensor(self.labels[idx])
+        return item, torch.tensor(self.labels[idx])
     
     def __len__(self):
         return len(self.labels)
 
 class Dataloader(pl.LightningDataModule):
     def __init__(self, model_name, batch_size, shuffle, train_path, test_path, split_seed = 42):
+        super().__init__()
         self.model_name = model_name
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -66,10 +67,10 @@ class Dataloader(pl.LightningDataModule):
             self.test_dataset = Dataset(tokenized_test ,test_label)
 
     def train_dataloader(self):
-        return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
+        return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=self.shuffle, num_workers = 4)
 
     def val_dataloader(self):
-        return torch.utils.data.DataLoader(self.val_dataset, batch_size=self.batch_size)
+        return torch.utils.data.DataLoader(self.val_dataset, batch_size=self.batch_size, num_workers = 4)
 
     def test_dataloader(self):
-        return torch.utils.data.DataLoader(self.test_dataset, batch_size=self.batch_size)
+        return torch.utils.data.DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers = 4)

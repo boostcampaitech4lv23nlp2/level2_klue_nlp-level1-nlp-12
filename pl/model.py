@@ -22,7 +22,7 @@ class Model(pl.LightningModule):
             input_ids = x['input_ids'],
             attention_mask = x['attention_mask'],
             token_type_ids=x['token_type_ids']
-        )['logits']
+        )[0]
 
         return x
 

@@ -4,6 +4,8 @@ import pickle
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
+import torch.nn.functional as F
+import torch
 
 def preprocessing_dataset(dataset):
     """ 처음 불러온 csv 파일을 원하는 형태의 DataFrame으로 변경 시켜줍니다."""
@@ -97,9 +99,13 @@ def compute_metrics(pred):
   }
 
 def n_compute_metrics(logits,y):
-    """ refactoring된 코드를 위한 compute_metrics"""    
-    pred = logits.argmax(-1)
-    prob = logits
+    """ refactoring된 코드를 위한 compute_metrics"""
+    logits = logits.cpu()
+    y = y.cpu()
+
+    prob = F.softmax(logits, dim=-1)
+    pred = np.argmax(logits.numpy(), axis=-1)
+    
     # calculate accuracy using sklearn's function
     f1 = klue_re_micro_f1(pred, y)
     auprc = klue_re_auprc(prob, y)
