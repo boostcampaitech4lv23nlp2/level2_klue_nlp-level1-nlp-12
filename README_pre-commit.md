@@ -6,6 +6,11 @@
 
 
 # git add .
-# git commit -m 'test'
+# git commit -m 'pre-commit_test'
 ## config 파일을 통해 black, isort, autoflake8 실행되어 적용됨
 ## 다시 git add와 commit을 실행하면 black,isort가 적용된 파일로 commit됨
+
+
+# [ 수정 시 ]
+# flake8 경우, setup.cfg파일에서 수정하기
+## ignore에 무시할 오류 작성해두기
