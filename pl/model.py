@@ -15,7 +15,8 @@ class Model(pl.LightningModule):
         self.plm = transformers.AutoModelForSequenceClassification.from_pretrained(
             pretrained_model_name_or_path=self.model_name, num_labels=30)
         # Loss 계산을 위해 사용될 CE Loss를 호출합니다.
-        self.loss_func = torch.nn.CrossEntropyLoss(label_smoothing=0.2)
+        #self.loss_func = torch.nn.CrossEntropyLoss(label_smoothing=0.2)
+        self.loss_func = torch.nn.CrossEntropyLoss()
 
     def forward(self, x):
         x = self.plm(
@@ -27,7 +28,14 @@ class Model(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx):
-        x, y = batch
+        x = batch
+
+        y = x['labels']
+        x = {
+            'input_ids' : x['input_ids'],
+            'token_type_ids' : x['token_type_ids'],
+            'attention_mask' : x['attention_mask']
+        }
         logits = self(x)
         loss = self.loss_func(logits, y)
 
