@@ -1,16 +1,32 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-yaml              # 모든 yaml 파일의 구문이 맞는지 확인
+      - id: end-of-file-fixer       # 모든 파일의 끝에 new line 이 없으면 추가
+      - id: trailing-whitespace     # 모든 라인의 끝에 공백이 있는지 확인하고 있으면 삭제
   - repo: https://github.com/ambv/black
     rev: 22.10.0
     hooks:
-      - id: black
-        #language_version: python3.8 
+      - id: black                   # .black
+        #language_version: python3.8
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort                   # .isort
   - repo: https://github.com/PyCQA/flake8
     rev: 5.0.4
     hooks:
       - id: flake8
-  - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
-    hooks:
-      - id: isort
+        args: [--max-line-length=120]
+  - repo: https://github.com/myint/autoflake
+    rev: v1.4
+    hooks:                          # autoflake는 사용되지 않는 import 및 변수를 제거(pyflakes사용)
+      - id: autoflake               # flake8 검사 전에 자동으로 변경될 수 있도록 설정
+        args:
+          - --in-place                    # diff를 출력하는 대신 파일을 변경
+          - --remove-unused-variables     # 사용하지 않는 변수 제거
+          - --remove-all-unused-imports   # 사용하지 않는 import 제거
+          - --expand-star-imports         # ??
 default_language_version:
   python: python3.8
