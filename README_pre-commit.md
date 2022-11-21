@@ -3,7 +3,8 @@
 1. (생략)git init
 2. pip install pre-commit                                  ## pre-commit 설치
 3. pre-commit install                                      ## .pre-commit-config.yaml 파일을 기반으로 pre-commit 기능을 git에 설치: 최초 한번 실행
-4. (생략:테스트용)pre-commit run                            ## pre-commit run --all-files
+4. (생략)pre-commit run                            ## 초기 셋업 단계에서 직접 실행하여 설정 확인하기
+## pre-commit run --all-files
 '''
 
 '''
