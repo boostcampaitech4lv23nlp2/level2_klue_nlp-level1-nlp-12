@@ -1,5 +1,4 @@
 # pyproject.toml
-
 [tool.black]
 line-length = 120
 
