@@ -1,0 +1,12 @@
+# pyproject.toml
+[tool.black]
+line-length = 120
+
+[tool.pyright]
+include = ["app"]
+exclude = ["**/__pycache__"]
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+pythonVersion = "3.8"
