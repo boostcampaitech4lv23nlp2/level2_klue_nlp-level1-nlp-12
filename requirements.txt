@@ -7,6 +7,6 @@ glances
 omegaconf
 wandb
 torchmetrics==0.10.0
-pytorch_lightning==1.7.3
+pytorch-lightning==1.7.3
 tqdm==4.64.1
 pyYAML==5.4.1
