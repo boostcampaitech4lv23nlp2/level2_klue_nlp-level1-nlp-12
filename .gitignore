@@ -5,6 +5,10 @@ logs
 ._*
 .empty
 dict_*
+nohup.out
+original
+wandb
+.git
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,python
 

@@ -1,6 +1,0 @@
-artifact_location: file:///opt/ml/code/level2_klue_nlp-level1-nlp-12/mlruns/372463030683601061
-creation_time: 1668750865982
-experiment_id: '372463030683601061'
-last_update_time: 1668750865982
-lifecycle_stage: active
-name: klue_RE
