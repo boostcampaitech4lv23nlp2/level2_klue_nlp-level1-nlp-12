@@ -7,10 +7,10 @@ from data import *
 from utils import *
 
 
-def train():
+def train(cfg):
     # load model and tokenizer
     # MODEL_NAME = "bert-base-uncased"
-    MODEL_NAME = "klue/bert-base"
+    MODEL_NAME = cfg.model.model_name
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
     # load dataset
