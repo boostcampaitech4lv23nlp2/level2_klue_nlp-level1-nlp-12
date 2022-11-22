@@ -34,7 +34,7 @@ def main():
     model_name_ch = re.sub("/", "_", cfg.model.model_name)
 
     # wandb Project name
-    train()
+    train(cfg)
 
 
 if __name__ == "__main__":
