@@ -25,7 +25,7 @@ class Model(pl.LightningModule):
             token_type_ids=x['token_type_ids']
         )[0]
 
-        return x
+        return x['logits']
 
     def training_step(self, batch, batch_idx):
         x = batch

@@ -1,6 +1,6 @@
 path:
-    train_path: ../../dataset/train/train.csv
-    test_path: ../../dataset/test/test_data.csv
+    train_path: /opt/ml/code/level2_klue_nlp-level1-nlp-12/dataset/train/train.csv
+    test_path: /opt/ml/code/level2_klue_nlp-level1-nlp-12/dataset/train/dev.csv
 
 data:
     shuffle: True
@@ -20,6 +20,6 @@ train:
     nums_folds: 5
     
 wandb:
-    wandb_username: rion_
+    wandb_username: seokhee
     wandb_project: sts
     wandb_entity: sts_et
