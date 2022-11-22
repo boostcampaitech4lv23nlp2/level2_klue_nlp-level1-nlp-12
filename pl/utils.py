@@ -5,8 +5,8 @@ import pandas as pd
 import sklearn
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import (accuracy_score, f1_score, precision_score,
-                             recall_score)
+
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from tqdm.auto import tqdm
 
 
@@ -15,9 +15,7 @@ def preprocessing_dataset(dataset):
     subject_entity = []
     object_entity = []
 
-    for i, j in tqdm(
-        zip(dataset["subject_entity"], dataset["object_entity"]), desc="preprocessing"
-    ):
+    for i, j in tqdm(zip(dataset["subject_entity"], dataset["object_entity"]), desc="preprocessing"):
         i = i[1:-1].split(",")[0].split(":")[1]
         j = j[1:-1].split(",")[0].split(":")[1]
 
@@ -39,9 +37,7 @@ def preprocessing_dataset(dataset):
 def tokenized_dataset(dataset, tokenizer):
     """tokenizer에 따라 sentence를 tokenizing 합니다."""
     concat_entity = []
-    for e01, e02 in tqdm(
-        zip(dataset["subject_entity"], dataset["object_entity"]), desc="tokenizing"
-    ):
+    for e01, e02 in tqdm(zip(dataset["subject_entity"], dataset["object_entity"]), desc="tokenizing"):
         temp = ""
         temp = e01 + "[SEP]" + e02
         concat_entity.append(temp)
@@ -106,10 +102,7 @@ def klue_re_micro_f1(preds, labels):
     no_relation_label_idx = label_list.index("no_relation")
     label_indices = list(range(len(label_list)))
     label_indices.remove(no_relation_label_idx)
-    return (
-        sklearn.metrics.f1_score(labels, preds, average="micro", labels=label_indices)
-        * 100.0
-    )
+    return sklearn.metrics.f1_score(labels, preds, average="micro", labels=label_indices) * 100.0
 
 
 def klue_re_auprc(probs, labels):
@@ -124,9 +117,7 @@ def klue_re_auprc(probs, labels):
         # print(targets_c)
         # print('*********')
         # print(preds_c)
-        precision, recall, _ = sklearn.metrics.precision_recall_curve(
-            targets_c, preds_c
-        )
+        precision, recall, _ = sklearn.metrics.precision_recall_curve(targets_c, preds_c)
         score[c] = sklearn.metrics.auc(recall, precision)
     return np.average(score) * 100.0
 

@@ -1,15 +1,18 @@
 import argparse
 import re
+import warnings
+
 from datetime import datetime, timedelta
 
 import wandb
+
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 
-import warnings
-warnings.filterwarnings(action='ignore')
+
+warnings.filterwarnings(action="ignore")
 
 from data_n import *
 from model import *
@@ -50,7 +53,7 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath='/opt/ml/code/pl/checkpoint',
+        dirpath="/opt/ml/code/pl/checkpoint",
         auto_insert_metric_name=True,
         monitor="val_loss",
         save_top_k=1,
@@ -76,13 +79,15 @@ if __name__ == "__main__":
 
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(
-        accelerator='gpu',
+        accelerator="gpu",
         devices=1,
         max_epochs=cfg.train.max_epoch,
         log_every_n_steps=cfg.train.logging_step,
         logger=wandb_logger,  # W&B integration
-        callbacks=[earlystopping, ],
-        deterministic=True
+        callbacks=[
+            earlystopping,
+        ],
+        deterministic=True,
     )
 
     trainer.fit(model=model, datamodule=dataloader)

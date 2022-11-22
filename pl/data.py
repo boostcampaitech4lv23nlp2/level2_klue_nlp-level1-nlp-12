@@ -5,9 +5,9 @@ import pandas as pd
 import pytorch_lightning as pl
 import torch
 import transformers
+
 from sklearn.model_selection import KFold
 from tqdm.auto import tqdm
-
 from utils import *
 
 
@@ -19,9 +19,7 @@ class Dataset(torch.utils.data.Dataset):
         self.labels = labels
 
     def __getitem__(self, idx):
-        item = {
-            key: val[idx].clone().detach() for key, val in self.pair_dataset.items()
-        }
+        item = {key: val[idx].clone().detach() for key, val in self.pair_dataset.items()}
         item["labels"] = torch.tensor(self.labels[idx])
         return item
 
@@ -55,9 +53,7 @@ class Dataloader(pl.LightningDataModule):
         self.val_dataset = None
         self.test_dataset = None
 
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
-            model_name, max_length=160
-        )
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, max_length=160)
 
     def setup(self, stage="fit"):
         if stage == "fit":
@@ -92,14 +88,10 @@ class Dataloader(pl.LightningDataModule):
             self.test_dataset = Dataset(tokenized_test, test_label)
 
     def train_dataloader(self):
-        return torch.utils.data.DataLoader(
-            self.train_dataset, batch_size=self.batch_size, shuffle=self.shuffle
-        )
+        return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
 
     def val_dataloader(self):
         return torch.utils.data.DataLoader(self.val_dataset, batch_size=self.batch_size)
 
     def test_dataloader(self):
-        return torch.utils.data.DataLoader(
-            self.test_dataset, batch_size=self.batch_size
-        )
+        return torch.utils.data.DataLoader(self.test_dataset, batch_size=self.batch_size)
