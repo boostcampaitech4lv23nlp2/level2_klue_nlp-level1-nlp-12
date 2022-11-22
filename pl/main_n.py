@@ -2,15 +2,18 @@ import argparse
 import re
 from datetime import datetime, timedelta
 
+import wandb
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
-from transformers import TrainingArguments
 
-import wandb
+import warnings
+warnings.filterwarnings(action='ignore')
+
 from data_n import *
 from model import *
+
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -43,8 +46,12 @@ if __name__ == "__main__":
         entity=cfg.wandb.wandb_entity,
     )
 
+    pl.seed_everything(cfg.train.seed, workers=True)
+
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
+        dirpath='/opt/ml/code/pl/checkpoint',
+        auto_insert_metric_name=True,
         monitor="val_loss",
         save_top_k=1,
         save_last=True,
@@ -69,16 +76,17 @@ if __name__ == "__main__":
 
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(
-        gpus=1,
+        accelerator='gpu',
+        devices=1,
         max_epochs=cfg.train.max_epoch,
         log_every_n_steps=cfg.train.logging_step,
         logger=wandb_logger,  # W&B integration
-        callbacks=[checkpoint_callback, earlystopping],
+        callbacks=[earlystopping, ],
+        deterministic=True
     )
 
-    # Train part
     trainer.fit(model=model, datamodule=dataloader)
-    trainer.test(model=model, datamodule=dataloader)
+    # trainer.test(model=model, datamodule=dataloader)
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"

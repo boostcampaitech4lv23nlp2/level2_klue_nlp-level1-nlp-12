@@ -115,11 +115,15 @@ def klue_re_micro_f1(preds, labels):
 def klue_re_auprc(probs, labels):
     """KLUE-RE AUPRC (with no_relation)"""
     labels = np.eye(30)[labels]
-
+    # print(labels)
+    # print('*****')
     score = np.zeros((30,))
     for c in range(30):
         targets_c = labels.take([c], axis=1).ravel()
         preds_c = probs.take([c], axis=1).ravel()
+        # print(targets_c)
+        # print('*********')
+        # print(preds_c)
         precision, recall, _ = sklearn.metrics.precision_recall_curve(
             targets_c, preds_c
         )
@@ -150,7 +154,7 @@ def n_compute_metrics(logits, y):
     logits = logits.detach().cpu()
     y = y.detach().cpu()
 
-    prob = F.softmax(logits, dim=-1).numpy()
+    prob = logits.numpy()
     pred = np.argmax(logits.numpy(), axis=-1)
 
     # calculate accuracy using sklearn's function
@@ -163,3 +167,11 @@ def n_compute_metrics(logits, y):
         "auprc": auprc,
         "accuracy": acc,
     }
+
+
+def load_data(dataset_dir):
+    """csv 파일을 경로에 맡게 불러 옵니다."""
+    pd_dataset = pd.read_csv(dataset_dir)
+    dataset = preprocessing_dataset(pd_dataset)
+
+    return dataset
