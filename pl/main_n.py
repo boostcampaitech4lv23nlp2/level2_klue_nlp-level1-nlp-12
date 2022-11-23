@@ -1,18 +1,16 @@
 import argparse
 import re
+
 from datetime import datetime, timedelta
 
-import wandb
+from data_n import *
+from model import *
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 
-import warnings
-warnings.filterwarnings(action='ignore')
-
-from data_n import *
-from model import *
+import wandb
 
 
 time_ = datetime.now() + timedelta(hours=9)
@@ -34,7 +32,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="base_config")
     args, _ = parser.parse_known_args()
 
-    cfg = OmegaConf.load(f"./config/{args.config}.yaml")
+    cfg = OmegaConf.load(f"/opt/ml/code/pl/config/{args.config}.yaml")
 
     # os.environ["WANDB_API_KEY"] = wandb_dict[cfg.wandb.wandb_username]
     wandb.login(key=wandb_dict[cfg.wandb.wandb_username])
@@ -50,13 +48,10 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath='/opt/ml/code/pl/checkpoint',
+        dirpath="/opt/ml/code/pl/checkpoint",
         auto_insert_metric_name=True,
         monitor="val_loss",
         save_top_k=1,
-        save_last=True,
-        save_weights_only=False,
-        verbose=False,
         mode="min",
     )
 
@@ -76,13 +71,15 @@ if __name__ == "__main__":
 
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(
-        accelerator='gpu',
+        accelerator="gpu",
         devices=1,
         max_epochs=cfg.train.max_epoch,
         log_every_n_steps=cfg.train.logging_step,
         logger=wandb_logger,  # W&B integration
-        callbacks=[earlystopping, ],
-        deterministic=True
+        callbacks=[
+            earlystopping,
+        ],
+        deterministic=True,
     )
 
     trainer.fit(model=model, datamodule=dataloader)
