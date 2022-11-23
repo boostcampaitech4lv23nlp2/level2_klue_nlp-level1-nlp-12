@@ -2,15 +2,15 @@ import argparse
 import re
 from datetime import datetime, timedelta
 
+import wandb
+from data_n import *
+from model import *
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 from transformers import TrainingArguments
-
-import wandb
-from data_n import *
-from model import *
+from utils import criterion_entrypoint
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -22,6 +22,38 @@ wandb_dict = {
     "seokhee": "c79d118b300d6cff52a644b8ae6ab0933723a59f",
     "dk100": "263b9353ecef00e35bdf063a51a82183544958cc",
 }
+
+
+class MyTrainer(pl.Trainer):
+    # loss_name 이라는 인자를 추가로 받아 self에 각인 시켜줍니다.
+    def __init__(self, loss_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_name = loss_name  # 각인!
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+
+        # config에 저장된 loss_name에 따라 다른 loss 계산
+        # if self.loss_name == 'CrossEntropy':
+        #     # lossname이 CrossEntropy 이면, custom_loss에 torch.nn.CrossEntropyLoss()를 선언(?) 해줍니다.
+        #     custom_loss = torch.nn.CrossEntropyLoss()
+        custom_loss = criterion_entrypoint(self.loss_name)
+
+        if self.label_smoother is not None and "labels" in inputs:
+            labels = inputs.pop("labels")
+        else:
+            labels = None
+
+        outputs = model(**inputs)
+
+        if labels is not None:
+            # loss를 계산 하던 부분에 custom_loss를 이용해 계산하는 코드를 넣어 줍니다!
+            # 원본 코드를 보시면 output[0]가 logit 임을 알 수 있습니다!
+            loss = custom_loss(outputs[0], labels)
+        else:
+            # We don't use .loss here since the model may return tuples instead of ModelOutput.
+            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
+        return (loss, outputs) if return_outputs else loss
+
 
 if __name__ == "__main__":
     # 하이퍼 파라미터 등 각종 설정값을 입력받습니다
@@ -67,7 +99,6 @@ if __name__ == "__main__":
     )
     model = Model(cfg)
 
-    # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(
         gpus=1,
         max_epochs=cfg.train.max_epoch,
@@ -75,10 +106,18 @@ if __name__ == "__main__":
         logger=wandb_logger,  # W&B integration
         callbacks=[checkpoint_callback, earlystopping],
     )
+    # trainer = MyTrainer(
+    #     gpus=1,
+    #     max_epochs=cfg.train.max_epoch,
+    #     log_every_n_steps=cfg.train.logging_step,
+    #     logger=wandb_logger,  # W&B integration
+    #     callbacks=[checkpoint_callback, earlystopping],
+    #     loss_name="CrossEntropy",  # CrossEntropy, focal, label_smoothing, f1
+    # )
 
     # Train part
     trainer.fit(model=model, datamodule=dataloader)
-    trainer.test(model=model, datamodule=dataloader)
+    # trainer.test(model=model, datamodule=dataloader)
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"

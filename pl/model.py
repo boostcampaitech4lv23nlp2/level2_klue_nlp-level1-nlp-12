@@ -1,9 +1,11 @@
+import warnings
+
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional
 import transformers
-import warnings
-warnings.filterwarnings(action='ignore')
+
+warnings.filterwarnings(action="ignore")
 
 from utils import klue_re_auprc, klue_re_micro_f1, n_compute_metrics
 
@@ -29,9 +31,9 @@ class Model(pl.LightningModule):
             input_ids=input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
-            labels=labels
+            labels=labels,
         )
-        return x['logits']
+        return x["logits"]
 
     def training_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
