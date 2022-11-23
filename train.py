@@ -79,6 +79,7 @@ def klue_re_micro_f1(preds, labels):
     )
 
 
+
 def klue_re_auprc(probs, labels):
     """KLUE-RE AUPRC (with no_relation)"""
     labels = np.eye(30)[labels]
@@ -249,3 +250,9 @@ if __name__ == "__main__":
 
     output_path = os.path.join(output_dir_path, f'{model_name_ch}_{time_now}_model.pt')
     torch.save(model, output_path)
+def main():
+    train()
+
+
+if __name__ == "__main__":
+    main()

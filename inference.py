@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
+
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import (AutoConfig, AutoModelForSequenceClassification,
-                          AutoTokenizer, Trainer, TrainingArguments)
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from load_data import *
+from load_data import RE_Dataset, load_data, tokenized_dataset
 
 
 def inference(model, tokenized_sent, device):
@@ -37,10 +37,7 @@ def inference(model, tokenized_sent, device):
         output_pred.append(result)
         output_prob.append(prob)
 
-    return (
-        np.concatenate(output_pred).tolist(),
-        np.concatenate(output_prob, axis=0).tolist(),
-    )
+    return np.concatenate(output_pred).tolist(), np.concatenate(output_prob, axis=0).tolist()
 
 
 def num_to_label(label):
@@ -89,9 +86,7 @@ def main(args):
     Re_test_dataset = RE_Dataset(test_dataset, test_label)
 
     ## predict answer
-    pred_answer, output_prob = inference(
-        model, Re_test_dataset, device
-    )  # model에서 class 추론
+    pred_answer, output_prob = inference(model, Re_test_dataset, device)  # model에서 class 추론
     pred_answer = num_to_label(pred_answer)  # 숫자로 된 class를 원래 문자열 라벨로 변환.
 
     ## make csv file with predicted answer
@@ -105,9 +100,7 @@ def main(args):
         }
     )
 
-    output.to_csv(
-        "./prediction/submission.csv", index=False
-    )  # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
+    output.to_csv("./prediction/submission.csv", index=False)  # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
     #### 필수!! ##############################################
     print("---- Finish! ----")
 

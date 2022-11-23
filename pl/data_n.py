@@ -5,7 +5,7 @@ import pandas as pd
 import pytorch_lightning as pl
 import torch
 import transformers
-from sklearn.model_selection import train_test_split
+
 from tqdm.auto import tqdm
 from utils import *
 
@@ -18,9 +18,7 @@ class Dataset(torch.utils.data.Dataset):
         self.labels = labels
 
     def __getitem__(self, idx):
-        item = {
-            key: val[idx].clone().detach() for key, val in self.pair_dataset.items()
-        }
+        item = {key: val[idx].clone().detach() for key, val in self.pair_dataset.items()}
         item["labels"] = torch.tensor(self.labels[idx])
         return item
 
@@ -29,9 +27,7 @@ class Dataset(torch.utils.data.Dataset):
 
 
 class Dataloader(pl.LightningDataModule):
-    def __init__(
-        self, model_name, batch_size, shuffle, train_path, test_path, split_seed=42
-    ):
+    def __init__(self, model_name, batch_size, shuffle, train_path, test_path, split_seed=42):
         super().__init__()
         self.model_name = model_name
         self.batch_size = batch_size
@@ -45,15 +41,12 @@ class Dataloader(pl.LightningDataModule):
         self.val_dataset = None
         self.test_dataset = None
 
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
-            model_name, max_length=160
-        )
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, max_length=200)
 
     def setup(self, stage="fit"):
         if stage == "fit":
             # 학습 데이터을 호출
-            total_data = pd.read_csv(self.train_path)
-            total_data = preprocessing_dataset(total_data)
+            total_data = load_data(self.train_path)
 
             train_data = total_data.sample(frac=0.9, random_state=self.split_seed)
             val_data = total_data.drop(train_data.index)
@@ -68,12 +61,15 @@ class Dataloader(pl.LightningDataModule):
             self.val_dataset = Dataset(tokenized_val, val_label)
 
         else:
-            test_data = pd.read_csv(self.test_path)
-            test_data = preprocessing_dataset(test_data)
-            test_label = label_to_num(test_data["label"].values)
-            tokenized_test = tokenized_dataset(test_data, self.tokenizer)
+            total_data = load_data(self.train_path)
 
-            self.test_dataset = Dataset(tokenized_test, test_label)
+            train_data = total_data.sample(frac=0.9, random_state=self.split_seed)
+            val_data = total_data.drop(train_data.index)
+
+            val_label = label_to_num(val_data["label"].values)
+            tokenized_val = tokenized_dataset(val_data, self.tokenizer)
+
+            self.test_dataset = Dataset(tokenized_val, val_label)
 
     def train_dataloader(self):
         return torch.utils.data.DataLoader(
@@ -84,11 +80,7 @@ class Dataloader(pl.LightningDataModule):
         )
 
     def val_dataloader(self):
-        return torch.utils.data.DataLoader(
-            self.val_dataset, batch_size=self.batch_size, num_workers=4
-        )
+        return torch.utils.data.DataLoader(self.val_dataset, batch_size=self.batch_size, num_workers=4)
 
     def test_dataloader(self):
-        return torch.utils.data.DataLoader(
-            self.test_dataset, batch_size=self.batch_size, num_workers=4
-        )
+        return torch.utils.data.DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers=4)

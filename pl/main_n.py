@@ -1,16 +1,24 @@
 import argparse
 import re
+import warnings
+
 from datetime import datetime, timedelta
 
 import wandb
 from data_n import *
 from model import *
+import wandb
+
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 from transformers import TrainingArguments
-from utils import criterion_entrypoint
+
+import wandb
+from data_n import *
+from model import *
+
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -75,8 +83,12 @@ if __name__ == "__main__":
         entity=cfg.wandb.wandb_entity,
     )
 
+    pl.seed_everything(cfg.train.seed, workers=True)
+
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
+        dirpath="/opt/ml/code/pl/checkpoint",
+        auto_insert_metric_name=True,
         monitor="val_loss",
         save_top_k=1,
         save_last=True,
@@ -100,11 +112,15 @@ if __name__ == "__main__":
     model = Model(cfg)
 
     trainer = pl.Trainer(
-        gpus=1,
+        accelerator="gpu",
+        devices=1,
         max_epochs=cfg.train.max_epoch,
         log_every_n_steps=cfg.train.logging_step,
         logger=wandb_logger,  # W&B integration
-        callbacks=[checkpoint_callback, earlystopping],
+        callbacks=[
+            earlystopping,
+        ],
+        deterministic=True,
     )
     # trainer = MyTrainer(
     #     gpus=1,
@@ -115,9 +131,8 @@ if __name__ == "__main__":
     #     loss_name="CrossEntropy",  # CrossEntropy, focal, label_smoothing, f1
     # )
 
-    # Train part
     trainer.fit(model=model, datamodule=dataloader)
-    # trainer.test(model=model, datamodule=dataloader)
+    trainer.test(model=model, datamodule=dataloader)
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"
