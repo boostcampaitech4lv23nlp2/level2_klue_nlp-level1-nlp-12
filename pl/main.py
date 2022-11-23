@@ -3,8 +3,6 @@ import re
 
 from datetime import datetime, timedelta
 
-import wandb
-
 from data import *
 from model import *
 from omegaconf import OmegaConf
@@ -12,6 +10,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 from transformers import TrainingArguments
+
+import wandb
 
 
 time_ = datetime.now() + timedelta(hours=9)

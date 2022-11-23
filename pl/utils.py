@@ -108,15 +108,10 @@ def klue_re_micro_f1(preds, labels):
 def klue_re_auprc(probs, labels):
     """KLUE-RE AUPRC (with no_relation)"""
     labels = np.eye(30)[labels]
-    # print(labels)
-    # print('*****')
     score = np.zeros((30,))
     for c in range(30):
         targets_c = labels.take([c], axis=1).ravel()
         preds_c = probs.take([c], axis=1).ravel()
-        # print(targets_c)
-        # print('*********')
-        # print(preds_c)
         precision, recall, _ = sklearn.metrics.precision_recall_curve(targets_c, preds_c)
         score[c] = sklearn.metrics.auc(recall, precision)
     return np.average(score) * 100.0
@@ -145,17 +140,14 @@ def n_compute_metrics(logits, y):
     logits = logits.detach().cpu()
     y = y.detach().cpu()
 
-    prob = logits.numpy()
     pred = np.argmax(logits.numpy(), axis=-1)
 
     # calculate accuracy using sklearn's function
     f1 = klue_re_micro_f1(pred, y)
-    auprc = klue_re_auprc(prob, y)
     acc = accuracy_score(y, pred)  # 리더보드 평가에는 포함되지 않습니다.
 
     return {
         "micro f1 score": f1,
-        "auprc": auprc,
         "accuracy": acc,
     }
 
