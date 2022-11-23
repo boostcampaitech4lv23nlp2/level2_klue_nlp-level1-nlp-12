@@ -5,7 +5,7 @@ import torch
 import sklearn
 import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
+from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer, EarlyStoppingCallback
 from load_data import *
 
 
@@ -72,7 +72,7 @@ def train():
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
   # load dataset
-  train_dataset = load_data("../../dataset/train/multi_label_aug_per.csv")
+  train_dataset = load_data("../../dataset/train/train.csv")
   dev_dataset = load_data("../../dataset/train/dev.csv") # validation용 데이터는 따로 만드셔야 합니다.
 
   train_label = label_to_num(train_dataset['label'].values)
@@ -101,10 +101,10 @@ def train():
   # 사용한 option 외에도 다양한 option들이 있습니다.
   # https://huggingface.co/transformers/main_classes/trainer.html#trainingarguments 참고해주세요.
   training_args = TrainingArguments(
-    output_dir='original',          # output directory
+    output_dir='base',          # output directory
     save_total_limit=2,              # number of total save model.
     save_steps=500,                 # model saving step.
-    num_train_epochs=4,              # total number of training epochs
+    num_train_epochs=20,              # total number of training epochs
     learning_rate=5e-5,               # learning_rate
     per_device_train_batch_size=16,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
@@ -117,6 +117,8 @@ def train():
                                 # `steps`: Evaluate every `eval_steps`.
                                 # `epoch`: Evaluate every end of epoch.
     eval_steps = 500,            # evaluation step.
+    #save_strategy='epoch',
+    metric_for_best_model = 'micro f1 score',
     load_best_model_at_end = True 
   )
   trainer = Trainer(
@@ -124,7 +126,8 @@ def train():
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset
     eval_dataset=RE_dev_dataset,             # evaluation dataset
-    compute_metrics=compute_metrics         # define metrics function
+    compute_metrics=compute_metrics,         # define metrics function
+    callbacks = [EarlyStoppingCallback(early_stopping_patience=3)]
   )
 
   # train model

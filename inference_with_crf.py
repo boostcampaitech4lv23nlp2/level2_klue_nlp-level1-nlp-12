@@ -1,6 +1,5 @@
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments
 from torch.utils.data import DataLoader
-# from load_data_hanja import * # test data 한자를 한국어로 변환 시 사용
 from load_data import *
 import pandas as pd
 import torch
@@ -11,7 +10,16 @@ import numpy as np
 import argparse
 from tqdm import tqdm
 
-def inference(model, tokenized_sent, device):
+
+def harmonic_av(p1, p2, entities):
+  total_p = np.zeros((p2.shape[0], 30))
+  for j in range(p2.shape[0]):
+    tmp = np.array(p1[(entities[j][0], entities[j][1])], dtype=float)
+    total_p[j] = ((np.power(p2[j], -1)+np.power(tmp, -1))/2)**(-1)
+    total_p[j, 0] = p2[j, 0]
+  return total_p
+
+def inference(model, tokenized_sent, device, entities):
   """
     test dataset을 DataLoader로 만들어 준 후,
     batch_size로 나눠 model이 예측 합니다.
@@ -20,6 +28,8 @@ def inference(model, tokenized_sent, device):
   model.eval()
   output_pred = []
   output_prob = []
+  with open('crf.pickle', 'rb') as f:
+    crf = pickle.load(f)
   for i, data in enumerate(tqdm(dataloader)):
     with torch.no_grad():
       outputs = model(
@@ -29,6 +39,7 @@ def inference(model, tokenized_sent, device):
           )
     logits = outputs[0]
     prob = F.softmax(logits, dim=-1).detach().cpu().numpy()
+    prob = harmonic_av(crf, prob, entities).tolist()
     logits = logits.detach().cpu().numpy()
     result = np.argmax(logits, axis=-1)
 
@@ -58,7 +69,8 @@ def load_test_dataset(dataset_dir, tokenizer):
   test_label = list(map(int,test_dataset['label'].values))
   # tokenizing dataset
   tokenized_test = tokenized_dataset(test_dataset, tokenizer)
-  return test_dataset['id'], tokenized_test, test_label
+  entity_type = test_dataset['entity_type']
+  return test_dataset['id'], tokenized_test, test_label, entity_type
 
 def main(args):
   """
@@ -77,11 +89,11 @@ def main(args):
 
   ## load test datset
   test_dataset_dir = "../../dataset/test/test_data.csv"
-  test_id, test_dataset, test_label = load_test_dataset(test_dataset_dir, tokenizer)
+  test_id, test_dataset, test_label, entity_type = load_test_dataset(test_dataset_dir, tokenizer)
   Re_test_dataset = RE_Dataset(test_dataset ,test_label)
 
   ## predict answer
-  pred_answer, output_prob = inference(model, Re_test_dataset, device) # model에서 class 추론
+  pred_answer, output_prob = inference(model, Re_test_dataset, device, entity_type) # model에서 class 추론
   pred_answer = num_to_label(pred_answer) # 숫자로 된 class를 원래 문자열 라벨로 변환.
   
   ## make csv file with predicted answer
@@ -89,7 +101,7 @@ def main(args):
   # 아래 directory와 columns의 형태는 지켜주시기 바랍니다.
   output = pd.DataFrame({'id':test_id,'pred_label':pred_answer,'probs':output_prob,})
 
-  output.to_csv('../prediction/submission_unfixed.csv', index=False) # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
+  output.to_csv('../prediction/submission_crf.csv', index=False) # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
   #### 필수!! ##############################################
   print('---- Finish! ----')
 if __name__ == '__main__':

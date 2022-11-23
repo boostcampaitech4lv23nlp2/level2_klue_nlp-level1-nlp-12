@@ -1,3 +1,5 @@
+wandb
+t2.ipynb
 best_model
 prediction
 results
@@ -5,10 +7,13 @@ logs
 ._*
 .empty
 dict_*
+pl_train*
 nohup.out
 original
 wandb
 .git
+base
+permu
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,python
 
