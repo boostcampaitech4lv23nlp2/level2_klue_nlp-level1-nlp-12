@@ -1,19 +1,18 @@
 import argparse
 import re
-import warnings
-
 from datetime import datetime, timedelta
 
+import torch
 import wandb
 
-from data_n import *
-from model import *
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
-from transformers import TrainingArguments
 
+from data_n import *
+from model import *
+from transformers import TrainingArguments
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -61,7 +60,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="base_config")
     args, _ = parser.parse_known_args()
 
-    cfg = OmegaConf.load(f"./config/{args.config}.yaml")
+    cfg = OmegaConf.load(f"/opt/ml/code/pl/config/{args.config}.yaml")
 
     # os.environ["WANDB_API_KEY"] = wandb_dict[cfg.wandb.wandb_username]
     wandb.login(key=wandb_dict[cfg.wandb.wandb_username])
@@ -81,9 +80,6 @@ if __name__ == "__main__":
         auto_insert_metric_name=True,
         monitor="val_loss",
         save_top_k=1,
-        save_last=True,
-        save_weights_only=False,
-        verbose=False,
         mode="min",
     )
 
@@ -102,6 +98,7 @@ if __name__ == "__main__":
     model = Model(cfg)
 
     trainer = pl.Trainer(
+        precision=16,
         accelerator="gpu",
         devices=1,
         max_epochs=cfg.train.max_epoch,
@@ -110,7 +107,7 @@ if __name__ == "__main__":
         callbacks=[
             earlystopping,
         ],
-        deterministic=True,
+        deterministic=True
     )
     # trainer = MyTrainer(
     #     accelerator="gpu",
@@ -126,7 +123,7 @@ if __name__ == "__main__":
     # )
 
     trainer.fit(model=model, datamodule=dataloader)
-    # trainer.test(model=model, datamodule=dataloader)
+    trainer.test(model=model, datamodule=dataloader,ckpt_path='best')
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"

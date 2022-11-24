@@ -5,9 +5,9 @@ import pandas as pd
 import pytorch_lightning as pl
 import torch
 import transformers
-
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from tqdm.auto import tqdm
+
 from utils import *
 
 
@@ -53,19 +53,18 @@ class Dataloader(pl.LightningDataModule):
         self.val_dataset = None
         self.test_dataset = None
 
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, max_length=160)
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, max_length=200)
 
     def setup(self, stage="fit"):
         if stage == "fit":
             # 학습 데이터을 호출
-            total_data = pd.read_csv(self.train_path)
-            total_data = preprocessing_dataset(total_data)
+            total_data = load_data(self.train_path)
             total_label = label_to_num(total_data["label"].values)
             tokenized_total = tokenized_dataset(total_data, self.tokenizer)
             total_dataset = Dataset(tokenized_dataset, total_label)
 
-            # KFold
-            kf = KFold(
+            # StratifiedKFold
+            kf = StratifiedKFold(
                 n_splits=self.num_splits,
                 shuffle=self.shuffle,
                 random_state=self.split_seed,
@@ -79,13 +78,15 @@ class Dataloader(pl.LightningDataModule):
             self.val_dataset = [total_dataset[x] for x in val_indexes]
 
         else:
-            test_data = pd.read_csv(self.test_path)
-            test_data = preprocessing_dataset(test_data)
-            test_label = list(map(int, test_data["labels"].values))
-            tokenized_test = tokenized_dataset(test_data, self.tokenizer)
-            test_id = test_data["id"]
+            total_data = load_data(self.train_path)
 
-            self.test_dataset = Dataset(tokenized_test, test_label)
+            train_data = total_data.sample(frac=0.9, random_state=self.split_seed)
+            val_data = total_data.drop(train_data.index)
+
+            val_label = label_to_num(val_data["label"].values)
+            tokenized_val = tokenized_dataset(val_data, self.tokenizer)
+
+            self.test_dataset = Dataset(tokenized_val, val_label)
 
     def train_dataloader(self):
         return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
