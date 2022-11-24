@@ -27,6 +27,8 @@ class Model(pl.LightningModule):
         # Loss 계산을 위해 사용될 CE Loss를 호출합니다.
         self.loss_func = criterion_entrypoint(config.train.loss_name)
         self.optimizer_name = config.train.optimizer_name
+        self.lr_decay_step = config.train.lr_decay_step
+        self.scheduler_name = config.train.scheduler_name
 
     def forward(self, x):
         x = self.plm(
@@ -84,4 +86,10 @@ class Model(pl.LightningModule):
             lr=self.lr,
             # weight_decay=5e-4
         )
-        return optimizer
+        _scheduler_dic = {
+            "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, self.lr_decay_step, gamma=0.5),
+            "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
+            "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
+        }
+        scheduler = _scheduler_dic[self.scheduler_name]
+        return [optimizer], [scheduler]
