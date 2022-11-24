@@ -1,11 +1,9 @@
 # pyproject.toml
 [tool.black]
 line-length = 120
-exclude = [".git",".gitignore"]
-'''
-    \.git
-    | \.hg
-    | \.mypy_cache
+exclude = '''
+    .git,
+    .gitignore
 '''
 
 [tool.isort]
