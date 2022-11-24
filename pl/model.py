@@ -53,10 +53,10 @@ class Model(pl.LightningModule):
         logits = self(x)
         loss = self.loss_func(logits, y.long())
 
-        self.log("val_loss", loss)
+        self.log("val_loss", loss, on_step=True, on_epoch=True)
         f1, accuracy = n_compute_metrics(logits, y).values()
-        self.log("val_f1", f1)
-        self.log("val_accuracy", accuracy)
+        self.log("val_f1", f1, on_step=True)
+        self.log("val_accuracy", accuracy, on_step=True)
 
         return {"logits": logits, "y": y}
 
@@ -68,7 +68,7 @@ class Model(pl.LightningModule):
         y = y.detach().cpu()
 
         auprc = klue_re_auprc(logits, y)
-        self.log("val_auprc", auprc)
+        self.log("val_auprc", auprc, on_step=True)
 
     def test_step(self, batch, batch_idx):
         x = batch
@@ -87,4 +87,10 @@ class Model(pl.LightningModule):
             lr=self.lr,
             # weight_decay=5e-4
         )
-        return optimizer
+        _scheduler_dic = {
+            "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, self.lr_decay_step, gamma=0.5),
+            "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
+            "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
+        }
+        scheduler = _scheduler_dic[self.scheduler_name]
+        return [optimizer], [scheduler]
