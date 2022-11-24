@@ -3,6 +3,7 @@ import re
 
 from datetime import datetime, timedelta
 
+import torch
 from data_n import *
 from model import *
 from omegaconf import OmegaConf
@@ -71,6 +72,7 @@ if __name__ == "__main__":
 
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(
+        precision=16,
         accelerator="gpu",
         devices=1,
         max_epochs=cfg.train.max_epoch,
@@ -79,11 +81,11 @@ if __name__ == "__main__":
         callbacks=[
             earlystopping,
         ],
-        deterministic=True,
+        deterministic=True
     )
 
     trainer.fit(model=model, datamodule=dataloader)
-    # trainer.test(model=model, datamodule=dataloader)
+    trainer.test(model=model, datamodule=dataloader,ckpt_path='best')
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"
