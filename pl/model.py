@@ -1,11 +1,12 @@
+from importlib import import_module
+
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional
 import transformers
-from importlib import import_module
 
-from utils import criterion_entrypoint, klue_re_auprc, klue_re_micro_f1, n_compute_metrics
-
+from utils import (criterion_entrypoint, klue_re_auprc, klue_re_micro_f1,
+                   n_compute_metrics)
 
 
 class Model(pl.LightningModule):
@@ -15,6 +16,8 @@ class Model(pl.LightningModule):
 
         self.model_name = config.model.model_name
         self.lr = config.train.learning_rate
+        self.lr_decay_step = config.train.lr_decay_step
+        self.scheduler_name = config.train.scheduler_name
         
         # 사용할 모델을 호출합니다.
         self.plm = transformers.AutoModelForSequenceClassification.from_pretrained(
@@ -69,7 +72,7 @@ class Model(pl.LightningModule):
         y = y.detach().cpu()
 
         auprc = klue_re_auprc(logits, y)
-        self.log("val_auprc", auprc, on_step=True)
+        self.log("val_auprc", auprc)
 
     def test_step(self, batch, batch_idx):
         x = batch
