@@ -204,9 +204,9 @@ pl/re/
 test.ipynb
 base_code/utils.py
 inference.py
-pl/config/base_config.yaml
-pl/main.py
-pl/main_n.py
-pl/model.py
-pl/utils.py
+# pl/config/base_config.yaml
+# pl/main.py
+# pl/main_n.py
+# pl/model.py
+# pl/utils.py
 train.py

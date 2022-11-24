@@ -8,8 +8,10 @@ import transformers
 
 warnings.filterwarnings(action="ignore")
 
-from utils import criterion_entrypoint, klue_re_auprc, klue_re_micro_f1, n_compute_metrics
 from importlib import import_module
+
+from utils import criterion_entrypoint, klue_re_auprc, klue_re_micro_f1, n_compute_metrics
+
 
 class Model(pl.LightningModule):
     def __init__(self, config):
