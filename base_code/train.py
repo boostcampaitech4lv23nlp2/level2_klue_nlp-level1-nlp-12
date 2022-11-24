@@ -1,27 +1,35 @@
-from transformers import (AutoConfig, AutoModelForSequenceClassification,
-                          AutoTokenizer, BertTokenizer, RobertaConfig,
-                          RobertaForSequenceClassification, RobertaTokenizer,
-                          Trainer, TrainingArguments)
+import torch.nn as nn
 
 from data import *
+from transformers import (
+    AutoConfig,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    BertTokenizer,
+    RobertaConfig,
+    RobertaForSequenceClassification,
+    RobertaTokenizer,
+    Trainer,
+    TrainingArguments
+)
 from utils import *
-import torch.nn as nn
 from utils import criterion_entrypoint
+
 
 class MyTrainer(Trainer):
     # loss_name 이라는 인자를 추가로 받아 self에 각인 시켜줍니다.
     def __init__(self, loss_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.loss_name= loss_name # 각인!
+        self.loss_name = loss_name  # 각인!
 
     def compute_loss(self, model, inputs, return_outputs=False):
 
-        # config에 저장된 loss_name에 따라 다른 loss 계산 
+        # config에 저장된 loss_name에 따라 다른 loss 계산
         # if self.loss_name == 'CrossEntropy':
         #     # lossname이 CrossEntropy 이면, custom_loss에 torch.nn.CrossEntropyLoss()를 선언(?) 해줍니다.
         #     custom_loss = torch.nn.CrossEntropyLoss()
         custom_loss = criterion_entrypoint(self.loss_name)
-                        
+
         if self.label_smoother is not None and "labels" in inputs:
             labels = inputs.pop("labels")
         else:
@@ -30,8 +38,8 @@ class MyTrainer(Trainer):
         outputs = model(**inputs)
 
         if labels is not None:
-            #loss를 계산 하던 부분에 custom_loss를 이용해 계산하는 코드를 넣어 줍니다!
-            #원본 코드를 보시면 output[0]가 logit 임을 알 수 있습니다!
+            # loss를 계산 하던 부분에 custom_loss를 이용해 계산하는 코드를 넣어 줍니다!
+            # 원본 코드를 보시면 output[0]가 logit 임을 알 수 있습니다!
             loss = custom_loss(outputs[0], labels)
         else:
             # We don't use .loss here since the model may return tuples instead of ModelOutput.
@@ -47,10 +55,10 @@ def train(cfg):
 
     # load dataset
     train_dataset = load_data("../dataset/train/train.csv")
-    dev_dataset = load_data("../dataset/train/dev.csv") # validation용 데이터는 따로 만드셔야 합니다.
+    dev_dataset = load_data("../dataset/train/dev.csv")  # validation용 데이터는 따로 만드셔야 합니다.
 
     train_label = label_to_num(train_dataset["label"].values)
-    dev_label = label_to_num(dev_dataset['label'].values)
+    dev_label = label_to_num(dev_dataset["label"].values)
 
     # tokenizing dataset
     tokenized_train = tokenized_dataset(train_dataset, tokenizer)
@@ -67,9 +75,7 @@ def train(cfg):
     model_config = AutoConfig.from_pretrained(MODEL_NAME)
     model_config.num_labels = 30
 
-    model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_NAME, config=model_config
-    )
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
     print(model.config)
     model.parameters
     model.to(device)
@@ -80,7 +86,7 @@ def train(cfg):
         output_dir="./results",  # output directory
         save_total_limit=5,  # number of total save model.
         save_steps=500,  # model saving step.
-        num_train_epochs=20,  # total number of training epochs
+        num_train_epochs=4,  # total number of training epochs
         learning_rate=5e-5,  # learning_rate
         per_device_train_batch_size=16,  # batch size per device during training
         per_device_eval_batch_size=16,  # batch size for evaluation
@@ -97,25 +103,22 @@ def train(cfg):
         report_to="wandb",
     )
 
-    # trainer = Trainer(
-        # model=model,  # the instantiated 🤗 Transformers model to be trained
-        # args=training_args,  # training arguments, defined above
-        # train_dataset=RE_train_dataset,  # training dataset
-        # eval_dataset=RE_dev_dataset,  # evaluation dataset
-        # compute_metrics=compute_metrics,  # define metrics function
-        # compute_loss = nn.CrossEntropyLoss,
-        # loss_name = nn.CrossEntropyLoss,
-
-    # )
-    trainer = MyTrainer(
+    trainer = Trainer(
         model=model,  # the instantiated 🤗 Transformers model to be trained
         args=training_args,  # training arguments, defined above
         train_dataset=RE_train_dataset,  # training dataset
         eval_dataset=RE_dev_dataset,  # evaluation dataset
         compute_metrics=compute_metrics,  # define metrics function
-        
-        loss_name='label_smoothing',            # CrossEntropy, focal, label_smoothing, f1
     )
+    # trainer = MyTrainer(
+    #     model=model,  # the instantiated 🤗 Transformers model to be trained
+    #     args=training_args,  # training arguments, defined above
+    #     train_dataset=RE_train_dataset,  # training dataset
+    #     eval_dataset=RE_dev_dataset,  # evaluation dataset
+    #     compute_metrics=compute_metrics,  # define metrics function
+
+    #     loss_name='focal',            # CrossEntropy, focal, label_smoothing, f1
+    # )
 
     # train model
     trainer.train()

@@ -193,3 +193,20 @@ cython_debug/
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python
+
+EDA.ipynb
+base_code/config/
+base_code/data.py
+base_code/main.py
+dataset/
+pl/output/
+pl/re/
+test.ipynb
+base_code/utils.py
+inference.py
+pl/config/base_config.yaml
+pl/main.py
+pl/main_n.py
+pl/model.py
+pl/utils.py
+train.py

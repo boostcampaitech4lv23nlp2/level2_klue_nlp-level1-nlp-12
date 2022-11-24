@@ -10,31 +10,40 @@ import pytorch_lightning as pl
 import sklearn
 import torch
 import wandb
+
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
-from sklearn.metrics import (accuracy_score, f1_score, precision_score,
-                             recall_score)
-from transformers import (AutoConfig, AutoModelForSequenceClassification,
-                          AutoTokenizer, BertTokenizer, RobertaConfig,
-                          RobertaForSequenceClassification, RobertaTokenizer,
-                          Trainer, TrainingArguments)
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from transformers import (
+    AutoConfig,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    BertTokenizer,
+    RobertaConfig,
+    RobertaForSequenceClassification,
+    RobertaTokenizer,
+    Trainer,
+    TrainingArguments
+)
 
 from load_data import *
 
+
 os.chdir("/opt/ml")
 wandb_dict = {
-    'gwkim_22':'f631be718175f02da4e2f651225fadb8541b3cd9',
-    'rion_':'0d57da7f9222522c1a3dbb645a622000e0344d36',
-    'daniel0801':'b8c4d92272716adcb1b2df6597cfba448854ff90',
-    'seokhee':'c79d118b300d6cff52a644b8ae6ab0933723a59f',
-    'dk100':'263b9353ecef00e35bdf063a51a82183544958cc'
+    "gwkim_22": "f631be718175f02da4e2f651225fadb8541b3cd9",
+    "rion_": "0d57da7f9222522c1a3dbb645a622000e0344d36",
+    "daniel0801": "b8c4d92272716adcb1b2df6597cfba448854ff90",
+    "seokhee": "c79d118b300d6cff52a644b8ae6ab0933723a59f",
+    "dk100": "263b9353ecef00e35bdf063a51a82183544958cc",
 }
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
 #############################################
+
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -73,11 +82,7 @@ def klue_re_micro_f1(preds, labels):
     no_relation_label_idx = label_list.index("no_relation")
     label_indices = list(range(len(label_list)))
     label_indices.remove(no_relation_label_idx)
-    return (
-        sklearn.metrics.f1_score(labels, preds, average="micro", labels=label_indices)
-        * 100.0
-    )
-
+    return sklearn.metrics.f1_score(labels, preds, average="micro", labels=label_indices) * 100.0
 
 
 def klue_re_auprc(probs, labels):
@@ -88,9 +93,7 @@ def klue_re_auprc(probs, labels):
     for c in range(30):
         targets_c = labels.take([c], axis=1).ravel()
         preds_c = probs.take([c], axis=1).ravel()
-        precision, recall, _ = sklearn.metrics.precision_recall_curve(
-            targets_c, preds_c
-        )
+        precision, recall, _ = sklearn.metrics.precision_recall_curve(targets_c, preds_c)
         score[c] = sklearn.metrics.auc(recall, precision)
     return np.average(score) * 100.0
 
@@ -151,9 +154,7 @@ def train():
     model_config = AutoConfig.from_pretrained(MODEL_NAME)
     model_config.num_labels = 30
 
-    model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_NAME, config=model_config
-    )
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, config=model_config)
     print(model.config)
     model.parameters
     model.to(device)
@@ -199,57 +200,63 @@ def train():
 if __name__ == "__main__":
     # main()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config',type=str,default='base_config')
+    parser.add_argument("--config", type=str, default="base_config")
     args, _ = parser.parse_known_args()
-    
-    cfg = OmegaConf.load(f'./config/{args.config}.yaml')
 
-    #os.environ["WANDB_API_KEY"] = wandb_dict[cfg.wandb.wandb_username]
-    wandb.login(key = wandb_dict[cfg.wandb.wandb_username])
-    model_name_ch = re.sub('/','_',cfg.model.model_name)
+    cfg = OmegaConf.load(f"./config/{args.config}.yaml")
+
+    # os.environ["WANDB_API_KEY"] = wandb_dict[cfg.wandb.wandb_username]
+    wandb.login(key=wandb_dict[cfg.wandb.wandb_username])
+    model_name_ch = re.sub("/", "_", cfg.model.model_name)
     wandb_logger = WandbLogger(
-                log_model="all",
-                name=f'{model_name_ch}_{cfg.train.batch_size}_{cfg.train.learning_rate}_{time_now}',
-                project=cfg.wandb.wandb_project,
-                entity=cfg.wandb.wandb_entity
-                )
+        log_model="all",
+        name=f"{model_name_ch}_{cfg.train.batch_size}_{cfg.train.learning_rate}_{time_now}",
+        project=cfg.wandb.wandb_project,
+        entity=cfg.wandb.wandb_entity,
+    )
 
     # Checkpoint
-    checkpoint_callback = ModelCheckpoint(monitor='val_pearson',
-                                        save_top_k=1,
-                                        save_last=True,
-                                        save_weights_only=False,
-                                        verbose=False,
-                                        mode='max')
+    checkpoint_callback = ModelCheckpoint(
+        monitor="val_pearson", save_top_k=1, save_last=True, save_weights_only=False, verbose=False, mode="max"
+    )
 
     # Earlystopping
-    earlystopping = EarlyStopping(monitor='val_pearson', patience=2, mode='max')
-    
+    earlystopping = EarlyStopping(monitor="val_pearson", patience=2, mode="max")
+
     # dataloader와 model을 생성합니다.
-    dataloader = Dataloader(cfg.model.model_name, cfg.train.batch_size, cfg.data.shuffle, cfg.path.train_path, cfg.path.dev_path,
-                            cfg.path.test_path, cfg.path.predict_path)
+    dataloader = Dataloader(
+        cfg.model.model_name,
+        cfg.train.batch_size,
+        cfg.data.shuffle,
+        cfg.path.train_path,
+        cfg.path.dev_path,
+        cfg.path.test_path,
+        cfg.path.predict_path,
+    )
     model = Model(cfg)
 
     # training_args = TrainingArguments(seed=args.train.seed)
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(
-        gpus=-1, 
-        max_epochs=cfg.train.max_epoch, 
+        gpus=-1,
+        max_epochs=cfg.train.max_epoch,
         log_every_n_steps=cfg.train.logging_step,
-        logger=wandb_logger,    # W&B integration
-        callbacks = [checkpoint_callback, earlystopping]
-        )
+        logger=wandb_logger,  # W&B integration
+        callbacks=[checkpoint_callback, earlystopping],
+    )
     # Train part
     trainer.fit(model=model, datamodule=dataloader)
     trainer.test(model=model, datamodule=dataloader)
 
     # 학습이 완료된 모델을 저장합니다.
-    output_dir_path = 'output'
+    output_dir_path = "output"
     if not os.path.exists(output_dir_path):
         os.makedirs(output_dir_path)
 
-    output_path = os.path.join(output_dir_path, f'{model_name_ch}_{time_now}_model.pt')
+    output_path = os.path.join(output_dir_path, f"{model_name_ch}_{time_now}_model.pt")
     torch.save(model, output_path)
+
+
 def main():
     train()
 

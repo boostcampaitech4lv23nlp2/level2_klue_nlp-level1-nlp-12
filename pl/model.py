@@ -5,10 +5,11 @@ import torch
 import torch.nn.functional
 import transformers
 
+
 warnings.filterwarnings(action="ignore")
 
-from utils import klue_re_auprc, klue_re_micro_f1, n_compute_metrics
-
+from utils import criterion_entrypoint, klue_re_auprc, klue_re_micro_f1, n_compute_metrics
+from importlib import import_module
 
 class Model(pl.LightningModule):
     def __init__(self, config):
@@ -22,7 +23,8 @@ class Model(pl.LightningModule):
             pretrained_model_name_or_path=self.model_name, num_labels=30
         )
         # Loss 계산을 위해 사용될 CE Loss를 호출합니다.
-        self.loss_func = torch.nn.CrossEntropyLoss()
+        self.loss_func = criterion_entrypoint(config.train.loss_name)
+        self.optimizer_name = config.train.optimizer_name
 
     def forward(self, x):
         x = self.plm(
@@ -56,11 +58,10 @@ class Model(pl.LightningModule):
         loss = self.loss_func(logits, y.long())
 
         f1, auprc, accuracy = n_compute_metrics(logits, y).values()
-        self.log("val_loss", loss)
-        self.log("val_f1", f1)
-        self.log("val_auprc", auprc)
-        self.log("val_accuracy", accuracy)
-
+        self.log("val_loss", loss, on_step=True, on_epoch=True)
+        self.log("val_f1", f1, on_step=True)
+        self.log("val_auprc", auprc, on_step=True)
+        self.log("val_accuracy", accuracy, on_step=True)
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -74,5 +75,11 @@ class Model(pl.LightningModule):
         self.log("test_auprc", auprc)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        # optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        opt_module = getattr(import_module("torch.optim"), self.optimizer_name)
+        optimizer = opt_module(
+            filter(lambda p: p.requires_grad, self.parameters()),
+            lr=self.lr,
+            # weight_decay=5e-4
+        )
         return optimizer

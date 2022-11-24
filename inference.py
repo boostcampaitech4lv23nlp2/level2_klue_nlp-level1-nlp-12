@@ -1,6 +1,8 @@
 import argparse
 import pickle as pickle
 
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
 import torch
@@ -11,6 +13,10 @@ from tqdm import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from load_data import RE_Dataset, load_data, tokenized_dataset
+
+
+time_ = datetime.now() + timedelta(hours=9)
+time_now = time_.strftime("%m%d%H%M")
 
 
 def inference(model, tokenized_sent, device):
@@ -45,7 +51,7 @@ def num_to_label(label):
     숫자로 되어 있던 class를 원본 문자열 라벨로 변환 합니다.
     """
     origin_label = []
-    with open("dict_num_to_label.pkl", "rb") as f:
+    with open("/opt/ml/code/level2_klue_nlp-level1-nlp-12/base_code/dict_num_to_label.pkl", "rb") as f:
         dict_num_to_label = pickle.load(f)
     for v in label:
         origin_label.append(dict_num_to_label[v])
@@ -81,7 +87,7 @@ def main(args):
     model.to(device)
 
     ## load test datset
-    test_dataset_dir = "../dataset/test/test_data.csv"
+    test_dataset_dir = "/opt/ml/code/level2_klue_nlp-level1-nlp-12/dataset/test/test_data.csv"
     test_id, test_dataset, test_label = load_test_dataset(test_dataset_dir, tokenizer)
     Re_test_dataset = RE_Dataset(test_dataset, test_label)
 
@@ -100,7 +106,7 @@ def main(args):
         }
     )
 
-    output.to_csv("./prediction/submission.csv", index=False)  # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
+    output.to_csv(f"./prediction/{time_now}submission.csv", index=False)  # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
     #### 필수!! ##############################################
     print("---- Finish! ----")
 
