@@ -1,7 +1,6 @@
 path:
     train_path: /opt/ml/code/level2_klue_nlp-level1-nlp-12/dataset/train/train.csv
     test_path: /opt/ml/code/level2_klue_nlp-level1-nlp-12/dataset/train/dev.csv
-
 data:
     shuffle: True
     augmentation: # adea, bt 등등
@@ -20,9 +19,10 @@ train:
     nums_folds: 5
     loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
+    lr_sch_use: False
     lr_decay_step: 20
     scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR
 wandb:
     wandb_username: seokhee
-    wandb_project: re
-    wandb_entity: sts_et
+    wandb_project: re_temp
+    wandb_entity: re_et
