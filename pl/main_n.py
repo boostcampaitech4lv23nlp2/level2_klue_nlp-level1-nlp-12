@@ -1,7 +1,10 @@
 import argparse
+import os
 import re
 
 from datetime import datetime, timedelta
+
+import torch
 
 from data_n import *
 from model import *
@@ -11,7 +14,6 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 
 import wandb
-
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -46,10 +48,14 @@ if __name__ == "__main__":
 
     pl.seed_everything(cfg.train.seed, workers=True)
 
+    ck_dir_path = f"/opt/ml/code/pl/checkpoint/{model_name_ch}"
+    if not os.path.exists(ck_dir_path):
+        os.makedirs(ck_dir_path)
+
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath="/opt/ml/code/pl/checkpoint",
-        auto_insert_metric_name=True,
+        dirpath=ck_dir_path,
+        filename="{epoch}_{val_loss:.2f}",
         monitor="val_loss",
         save_top_k=1,
         mode="min",
@@ -71,19 +77,18 @@ if __name__ == "__main__":
 
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(
+        precision=16,
         accelerator="gpu",
         devices=1,
         max_epochs=cfg.train.max_epoch,
         log_every_n_steps=cfg.train.logging_step,
         logger=wandb_logger,  # W&B integration
-        callbacks=[
-            earlystopping,
-        ],
+        callbacks=[earlystopping, checkpoint_callback],
         deterministic=True,
     )
 
     trainer.fit(model=model, datamodule=dataloader)
-    # trainer.test(model=model, datamodule=dataloader)
+    trainer.test(model=model, datamodule=dataloader, ckpt_path="best")
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"

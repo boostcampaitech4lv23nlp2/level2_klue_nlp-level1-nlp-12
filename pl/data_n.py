@@ -9,7 +9,6 @@ import transformers
 from tqdm.auto import tqdm
 from utils import *
 
-
 class Dataset(torch.utils.data.Dataset):
     """Dataset 구성을 위한 Class"""
 

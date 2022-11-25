@@ -1,11 +1,9 @@
 # pyproject.toml
 [tool.black]
 line-length = 120
-exclude = [".git",".gitignore"]
-'''
-    \.git
-    | \.hg
-    | \.mypy_cache
+exclude = '''
+    .git
+    .gitignore
 '''
 
 [tool.isort]
@@ -15,5 +13,5 @@ line_length = 120                            # 최대 길이 설정(black,flake�
 lines_after_imports = 1                      # import 다음 줄의 빈 줄 수 정하기
 lines_between_types = 1                      # import와 direct(type) 사이의 줄 간격
 multi_line_output = 3
-skip = [".git",".gitignore"]                        # skip할 폴더
+skip = [".git",".gitignore"]                 # skip할 폴더
 py_version=38
