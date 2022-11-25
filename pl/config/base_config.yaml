@@ -5,10 +5,10 @@ path:
 data:
     shuffle: True
     augmentation: # adea, bt 등등
-    
+
 model:
-    model_name: klue/bert-base
-    saved_name: base
+    model_name: klue/roberta-base
+    saved_name: roberta-base
 
 train:
     seed: 42
@@ -23,6 +23,6 @@ train:
     lr_decay_step: 20
     scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR
 wandb:
-    wandb_username: rion_
-    wandb_project: re
-    wandb_entity: sts_et
+    wandb_username: dk100
+    wandb_project: lv2_personal_test
+    wandb_entity: dk100
