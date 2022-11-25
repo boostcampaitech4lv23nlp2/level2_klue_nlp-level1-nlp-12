@@ -1,17 +1,16 @@
 import argparse
 import re
-
 from datetime import datetime, timedelta
 
-from data_n import *
-from model import *
+import torch
+import wandb
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 
-import wandb
-
+from data_n import *
+from model import *
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -71,6 +70,7 @@ if __name__ == "__main__":
 
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(
+        precision=16,
         accelerator="gpu",
         devices=1,
         max_epochs=cfg.train.max_epoch,
@@ -79,11 +79,11 @@ if __name__ == "__main__":
         callbacks=[
             earlystopping,
         ],
-        deterministic=True,
+        deterministic=True
     )
 
     trainer.fit(model=model, datamodule=dataloader)
-    # trainer.test(model=model, datamodule=dataloader)
+    trainer.test(model=model, datamodule=dataloader,ckpt_path='best')
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"

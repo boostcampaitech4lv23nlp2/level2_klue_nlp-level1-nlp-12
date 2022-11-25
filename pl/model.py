@@ -1,11 +1,12 @@
+from importlib import import_module
+
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional
 import transformers
-from importlib import import_module
 
-from utils import criterion_entrypoint, klue_re_auprc, klue_re_micro_f1, n_compute_metrics
-
+from utils import (criterion_entrypoint, klue_re_auprc, klue_re_micro_f1,
+                   n_compute_metrics)
 
 
 class Model(pl.LightningModule):
@@ -15,6 +16,9 @@ class Model(pl.LightningModule):
 
         self.model_name = config.model.model_name
         self.lr = config.train.learning_rate
+        self.lr_decay_step = config.train.lr_decay_step
+        self.scheduler_name = config.train.scheduler_name
+        
         # 사용할 모델을 호출합니다.
         self.plm = transformers.AutoModelForSequenceClassification.from_pretrained(
             pretrained_model_name_or_path=self.model_name, num_labels=30
@@ -53,10 +57,10 @@ class Model(pl.LightningModule):
         logits = self(x)
         loss = self.loss_func(logits, y.long())
 
-        self.log("val_loss", loss)
+        self.log("val_loss", loss, on_step=True, on_epoch=True)
         f1, accuracy = n_compute_metrics(logits, y).values()
-        self.log("val_f1", f1)
-        self.log("val_accuracy", accuracy)
+        self.log("val_f1", f1, on_step=True)
+        self.log("val_accuracy", accuracy, on_step=True)
 
         return {"logits": logits, "y": y}
 
@@ -76,8 +80,20 @@ class Model(pl.LightningModule):
 
         logits = self(x)
 
-        f1, auprc, _ = n_compute_metrics(logits, y).values()
+        f1, accuracy = n_compute_metrics(logits, y).values()
         self.log("test_f1", f1)
+        self.log("test_accuracy", accuracy)
+
+        return {"logits": logits, "y": y}
+
+    def test_epoch_end(self, outputs):
+        logits = torch.cat([x["logits"] for x in outputs])
+        y = torch.cat([x["y"] for x in outputs])
+
+        logits = logits.detach().cpu().numpy()
+        y = y.detach().cpu()
+
+        auprc = klue_re_auprc(logits, y)
         self.log("test_auprc", auprc)
 
     def configure_optimizers(self):
@@ -87,4 +103,10 @@ class Model(pl.LightningModule):
             lr=self.lr,
             # weight_decay=5e-4
         )
-        return optimizer
+        _scheduler_dic = {
+            "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, self.lr_decay_step, gamma=0.5),
+            "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
+            "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
+        }
+        scheduler = _scheduler_dic[self.scheduler_name]
+        return [optimizer], [scheduler]
