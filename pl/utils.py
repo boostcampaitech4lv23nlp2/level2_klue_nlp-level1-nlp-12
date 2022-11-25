@@ -6,10 +6,9 @@ import sklearn
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.metrics import (accuracy_score, f1_score, precision_score,
-                             recall_score)
-from tqdm.auto import tqdm
 
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from tqdm.auto import tqdm
 
 def preprocessing_dataset(dataset):
     """처음 불러온 csv 파일을 원하는 형태의 DataFrame으로 변경 시켜줍니다."""
@@ -159,6 +158,7 @@ def load_data(dataset_dir):
     dataset = preprocessing_dataset(pd_dataset)
 
     return dataset
+
 
 # loss funcion
 # https://discuss.pytorch.org/t/is-this-a-correct-implementation-for-focal-loss-in-pytorch/43327/8

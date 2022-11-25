@@ -5,9 +5,7 @@ import torch
 import torch.nn.functional
 import transformers
 
-from utils import (criterion_entrypoint, klue_re_auprc, klue_re_micro_f1,
-                   n_compute_metrics)
-
+from utils import criterion_entrypoint, klue_re_auprc, klue_re_micro_f1, n_compute_metrics
 
 class Model(pl.LightningModule):
     def __init__(self, config):
@@ -18,7 +16,7 @@ class Model(pl.LightningModule):
         self.lr = config.train.learning_rate
         self.lr_decay_step = config.train.lr_decay_step
         self.scheduler_name = config.train.scheduler_name
-        
+
         # 사용할 모델을 호출합니다.
         self.plm = transformers.AutoModelForSequenceClassification.from_pretrained(
             pretrained_model_name_or_path=self.model_name, num_labels=30
