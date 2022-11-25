@@ -1,6 +1,7 @@
 import argparse
 import re
 from datetime import datetime, timedelta
+import os
 
 import torch
 import wandb
@@ -45,10 +46,14 @@ if __name__ == "__main__":
 
     pl.seed_everything(cfg.train.seed, workers=True)
 
+    ck_dir_path = f"/opt/ml/code/pl/checkpoint/{model_name_ch}"
+    if not os.path.exists(ck_dir_path):
+        os.makedirs(ck_dir_path)
+
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath="/opt/ml/code/pl/checkpoint",
-        auto_insert_metric_name=True,
+        dirpath=ck_dir_path,
+        filename='{epoch}_{val_loss:.2f}',
         monitor="val_loss",
         save_top_k=1,
         mode="min",
@@ -77,7 +82,7 @@ if __name__ == "__main__":
         log_every_n_steps=cfg.train.logging_step,
         logger=wandb_logger,  # W&B integration
         callbacks=[
-            earlystopping,
+            earlystopping,checkpoint_callback
         ],
         deterministic=True
     )
