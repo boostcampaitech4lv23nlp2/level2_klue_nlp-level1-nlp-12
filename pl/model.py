@@ -1,8 +1,8 @@
 from importlib import import_module
 
+import numpy as np
 import pytorch_lightning as pl
 import torch
-import torch.nn.functional
 import transformers
 
 from utils import criterion_entrypoint, klue_re_auprc, klue_re_micro_f1, n_compute_metrics
@@ -30,7 +30,6 @@ class Model(pl.LightningModule):
             input_ids=x["input_ids"],
             attention_mask=x["attention_mask"],
             token_type_ids=x["token_type_ids"],
-            labels=x["labels"],
         )
         return x["logits"]
 
@@ -93,6 +92,11 @@ class Model(pl.LightningModule):
 
         auprc = klue_re_auprc(logits, y)
         self.log("test_auprc", auprc)
+
+    def predict_step(self, batch, batch_idx):
+        logits = self(batch)
+
+        return logits
 
     def configure_optimizers(self):
         opt_module = getattr(import_module("torch.optim"), self.optimizer_name)

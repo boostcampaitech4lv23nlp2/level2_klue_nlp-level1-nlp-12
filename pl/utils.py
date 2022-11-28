@@ -160,6 +160,32 @@ def load_data(dataset_dir):
     return dataset
 
 
+def num_to_label(label):
+    """
+    숫자로 되어 있던 class를 원본 문자열 라벨로 변환 합니다.
+    """
+    origin_label = []
+    with open("/opt/ml/code/dict_num_to_label.pkl", "rb") as f:
+        dict_num_to_label = pickle.load(f)
+    for v in label:
+        origin_label.append(dict_num_to_label[v])
+
+    return origin_label
+
+
+def make_output(logits):
+    logits = torch.cat([x for x in logits])
+
+    prob = F.softmax(logits, dim=-1).tolist()
+    pred = np.argmax(logits, axis=-1).tolist()
+
+    pred_a = num_to_label(pred)
+
+    output = pd.DataFrame({"id": 0, "pred_label": pred_a, "probs": prob})
+    output["id"] = range(0, len(output))
+    output.to_csv("./submission.csv", index=False)
+
+
 # loss funcion
 # https://discuss.pytorch.org/t/is-this-a-correct-implementation-for-focal-loss-in-pytorch/43327/8
 class FocalLoss(nn.Module):

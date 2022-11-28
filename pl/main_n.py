@@ -5,6 +5,7 @@ import re
 from datetime import datetime, timedelta
 
 import torch
+import wandb
 
 from data_n import *
 from model import *
@@ -12,8 +13,6 @@ from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
-
-import wandb
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -54,11 +53,7 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath=ck_dir_path,
-        filename="{epoch}_{val_loss:.2f}",
-        monitor="val_loss",
-        save_top_k=1,
-        mode="min",
+        dirpath=ck_dir_path, filename="{epoch}_{val_loss:.2f}", monitor="val_loss", save_top_k=1, mode="min"
     )
 
     # Earlystopping
