@@ -11,3 +11,4 @@ pytorch-lightning==1.7.3
 tqdm==4.64.1
 pyYAML==5.4.1
 rich
+matplotlib
