@@ -24,5 +24,5 @@ train:
     scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR
 wandb:
     wandb_username: rion_
-    wandb_project: re
-    wandb_entity: sts_et
+    wandb_project: re_temp
+    wandb_entity: re_et

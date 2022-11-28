@@ -174,6 +174,9 @@ def num_to_label(label):
 
 
 def make_output(logits):
+    """
+    batch 단위의 logits을 풀고 prob와 pred를 통해 csv파일을 만듭니다.
+    """
     logits = torch.cat([x for x in logits])
 
     prob = F.softmax(logits, dim=-1).tolist()

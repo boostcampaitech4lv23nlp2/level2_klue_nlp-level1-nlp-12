@@ -10,7 +10,7 @@ import wandb
 from data_n import *
 from model import *
 from omegaconf import OmegaConf
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 
@@ -53,11 +53,11 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath=ck_dir_path, filename="{epoch}_{val_loss:.2f}", monitor="val_loss", save_top_k=1, mode="min"
+        dirpath=ck_dir_path, filename="{epoch}_{val_f1:.2f}", monitor="val_f1", save_top_k=1, mode="max"
     )
 
     # Earlystopping
-    earlystopping = EarlyStopping(monitor="val_loss", patience=2, mode="min")
+    earlystopping = EarlyStopping(monitor="val_f1", patience=2, mode="min")
 
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(
@@ -78,8 +78,11 @@ if __name__ == "__main__":
         max_epochs=cfg.train.max_epoch,
         log_every_n_steps=cfg.train.logging_step,
         logger=wandb_logger,  # W&B integration
-        callbacks=[earlystopping, checkpoint_callback],
+        callbacks=[earlystopping, checkpoint_callback, RichProgressBar()],
         deterministic=True,
+        # limit_train_batches=0.15,  # use only 30% of training data
+        # limit_val_batches = 0.01, # use only 1% of val data
+        # limit_train_batches=10    # use only 10 batches of training data
     )
 
     trainer.fit(model=model, datamodule=dataloader)
@@ -91,4 +94,4 @@ if __name__ == "__main__":
         os.makedirs(output_dir_path)
 
     output_path = os.path.join(output_dir_path, f"{model_name_ch}_{time_now}_model.pt")
-    torch.save(model, output_path)
+    torch.save(model.state_dict(), output_path)

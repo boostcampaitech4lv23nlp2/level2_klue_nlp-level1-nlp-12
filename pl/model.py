@@ -40,10 +40,8 @@ class Model(pl.LightningModule):
         logits = self(x)
         loss = self.loss_func(logits, y.long())
 
-        self.log("train_loss", loss)
         f1, accuracy = n_compute_metrics(logits, y).values()
-        self.log("train_f1", f1)
-        self.log("train_accuracy", accuracy)
+        self.log("train", {"loss": loss, "f1": f1, "accuracy": accuracy})
 
         return loss
 
@@ -54,10 +52,9 @@ class Model(pl.LightningModule):
         logits = self(x)
         loss = self.loss_func(logits, y.long())
 
-        self.log("val_loss", loss, on_step=True, on_epoch=True)
         f1, accuracy = n_compute_metrics(logits, y).values()
+        self.log("val", {"loss": loss, "accuracy": accuracy})
         self.log("val_f1", f1, on_step=True)
-        self.log("val_accuracy", accuracy, on_step=True)
 
         return {"logits": logits, "y": y}
 
@@ -79,7 +76,6 @@ class Model(pl.LightningModule):
 
         f1, accuracy = n_compute_metrics(logits, y).values()
         self.log("test_f1", f1)
-        self.log("test_accuracy", accuracy)
 
         return {"logits": logits, "y": y}
 
