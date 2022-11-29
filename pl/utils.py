@@ -6,9 +6,17 @@ import sklearn
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import re
 
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from tqdm.auto import tqdm
+
+def hanja_replace(dataset):          # 전처리 기능 추가
+    hanja = re.compile('([一-鿕]|[㐀-䶵]|[豈-龎])+')
+    replace = '(한자)'
+    re_train_data = dataset.replace(hanja,replace)
+
+    return re_train_data
 
 def preprocessing_dataset(dataset):
     """처음 불러온 csv 파일을 원하는 형태의 DataFrame으로 변경 시켜줍니다."""
@@ -31,6 +39,8 @@ def preprocessing_dataset(dataset):
             "label": dataset["label"],
         }
     )
+    
+    #out_dataset = hanja_replace(out_dataset)
     return out_dataset
 
 

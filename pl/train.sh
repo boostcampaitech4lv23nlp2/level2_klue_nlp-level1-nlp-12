@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIGS=("base_config")
+CONFIGS=("hanja_config")
 
 config_length=${#CONFIGS[@]}
 
