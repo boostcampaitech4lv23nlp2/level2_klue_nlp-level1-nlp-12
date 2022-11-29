@@ -12,6 +12,7 @@ class Model(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
 
+        self.batch_size = config.train.batch_size
         self.model_name = config.model.model_name
         self.lr = config.train.learning_rate
 
@@ -99,13 +100,4 @@ class Model(pl.LightningModule):
             lr=self.lr,
             # weight_decay=5e-4
         )
-        if self.lr_sch_use:
-            _scheduler_dic = {
-                "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, self.lr_decay_step, gamma=0.5),
-                "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
-                "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
-            }
-            scheduler = _scheduler_dic[self.scheduler_name]
-            return [optimizer], [scheduler]
-        else:
-            return optimizer
+        return optimizer
