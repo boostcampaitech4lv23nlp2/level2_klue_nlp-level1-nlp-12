@@ -99,4 +99,13 @@ class Model(pl.LightningModule):
             lr=self.lr,
             # weight_decay=5e-4
         )
-        return optimizer
+        if self.lr_sch_use:
+            _scheduler_dic = {
+                "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, self.lr_decay_step, gamma=0.5),
+                "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
+                "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
+            }
+            scheduler = _scheduler_dic[self.scheduler_name]
+            return [optimizer], [scheduler]
+        else:
+            return optimizer
