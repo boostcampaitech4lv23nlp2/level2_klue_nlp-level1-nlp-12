@@ -88,7 +88,7 @@ if __name__ == "__main__":
             logger=wandb_logger,
             callbacks=[checkpoint_callback, earlystopping, RichProgressBar()],
             deterministic=True,
-            limit_train_batches=0.05,
+            # limit_train_batches=0.05, 
         )
         trainer.fit(model=model, datamodule=datamodule)
         score = trainer.test(model=model, datamodule=datamodule)
