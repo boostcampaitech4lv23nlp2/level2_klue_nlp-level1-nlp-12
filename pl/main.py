@@ -1,6 +1,7 @@
 import argparse
-import re
 import os
+import re
+import warnings
 
 from datetime import datetime, timedelta
 
@@ -12,8 +13,8 @@ from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
-import warnings
-warnings.filterwarnings(action='ignore')
+
+warnings.filterwarnings(action="ignore")
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -46,7 +47,7 @@ if __name__ == "__main__":
         project=cfg.wandb.wandb_project,
         entity=cfg.wandb.wandb_entity,
     )
-    
+
     ck_dir_path = f"/opt/ml/code/pl/checkpoint/{model_name_ch}"
     if not os.path.exists(ck_dir_path):
         os.makedirs(ck_dir_path)
@@ -87,7 +88,7 @@ if __name__ == "__main__":
             logger=wandb_logger,
             callbacks=[checkpoint_callback, earlystopping, RichProgressBar()],
             deterministic=True,
-            limit_train_batches=0.05
+            limit_train_batches=0.05,
         )
         trainer.fit(model=model, datamodule=datamodule)
         score = trainer.test(model=model, datamodule=datamodule)

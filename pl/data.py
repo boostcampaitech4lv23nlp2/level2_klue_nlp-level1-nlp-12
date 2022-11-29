@@ -68,7 +68,7 @@ class Dataloader(pl.LightningDataModule):
             tokenized_total = tokenized_dataset(total_data, self.tokenizer)
             total_dataset = Dataset(tokenized_total, total_label)
 
-            all_splits = [k for k in kf.split(total_dataset,total_label)]
+            all_splits = [k for k in kf.split(total_dataset, total_label)]
             # k번째 Fold Dataset 선택
             train_indexes, val_indexes = all_splits[self.k]
             train_indexes, val_indexes = train_indexes.tolist(), val_indexes.tolist()
