@@ -1,5 +1,6 @@
 import argparse
 import re
+import os
 
 from datetime import datetime, timedelta
 
@@ -8,10 +9,9 @@ import wandb
 from data import *
 from model import *
 from omegaconf import OmegaConf
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
-from transformers import TrainingArguments
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -33,6 +33,7 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     cfg = OmegaConf.load(f"./config/{args.config}.yaml")
+    pl.seed_everything(cfg.train.seed, workers=True)
 
     # os.environ["WANDB_API_KEY"] = wandb_dict[cfg.wandb.wandb_username]
     wandb.login(key=wandb_dict[cfg.wandb.wandb_username])
@@ -46,54 +47,19 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        monitor="val_loss",
+        monitor="val_f1",
         save_top_k=1,
-        save_last=True,
-        save_weights_only=False,
-        verbose=False,
-        mode="min",
+        mode="max",
     )
 
     # Earlystopping
-    earlystopping = EarlyStopping(monitor="val_loss", patience=2, mode="min")
+    earlystopping = EarlyStopping(monitor="val_f1", patience=2, mode="max")
 
-    # dataloader와 model을 생성합니다.
-    dataloader = Dataloader(
-        cfg.model.model_name,
-        cfg.train.batch_size,
-        cfg.data.shuffle,
-        cfg.path.train_path,
-        cfg.path.dev_path,
-        cfg.path.test_path,
-        cfg.path.predict_path,
-    )
     model = Model(cfg)
 
-    training_args = TrainingArguments(
-        output_dir="./results",  # output directory
-        save_total_limit=5,  # number of total save model.
-        save_steps=500,  # model saving step.
-        num_train_epochs=20,  # total number of training epochs
-        learning_rate=5e-5,  # learning_rate
-        per_device_train_batch_size=16,  # batch size per device during training
-        per_device_eval_batch_size=16,  # batch size for evaluation
-        warmup_steps=500,  # number of warmup steps for learning rate scheduler
-        weight_decay=0.01,  # strength of weight decay
-        logging_dir="./logs",  # directory for storing logs
-        logging_steps=100,  # log saving step.
-        evaluation_strategy="steps",  # evaluation strategy to adopt during training
-        # `no`: No evaluation during training.
-        # `steps`: Evaluate every `eval_steps`.
-        # `epoch`: Evaluate every end of epoch.
-        eval_steps=500,  # evaluation step.
-        load_best_model_at_end=True,
-    )
-
     results = []
-    nums_folds = cfg.nums_folds
-    split_seed = cfg.split_seed
 
-    for k in range(nums_folds):
+    for k in range(cfg.train.nums_folds):
         datamodule = Dataloader(
             cfg.model.model_name,
             cfg.train.batch_size,
@@ -101,21 +67,26 @@ if __name__ == "__main__":
             cfg.path.train_path,
             cfg.path.test_path,
             k=k,
-            split_seed=split_seed,
-            num_splits=nums_folds,
+            split_seed=cfg.train.seed,
+            num_splits=cfg.train.nums_folds,
         )
-        datamodule.setup()
+
         trainer = pl.Trainer(
-            gpus=1,
-            args=training_args,
+            precision=16,
+            accelerator="gpu",
+            devices=1,
+            max_epochs=cfg.train.max_epoch,
+            log_every_n_steps=cfg.train.logging_step,
             logger=wandb_logger,
-            callbacks=[checkpoint_callback, earlystopping],
-            compute_metrics=compute_metrics,
+            callbacks=[checkpoint_callback, earlystopping, RichProgressBar()],
+            deterministic=True,
         )
         trainer.fit(model=model, datamodule=datamodule)
         score = trainer.test(model=model, datamodule=datamodule)
 
         results.extend(score)
+
+    print("성능은 ",results)
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"

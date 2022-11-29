@@ -1,4 +1,3 @@
-import os
 import pickle as pickle
 
 import pandas as pd
@@ -38,6 +37,7 @@ class Dataloader(pl.LightningDataModule):
         split_seed=42,
         num_splits=5,
     ):
+        super().__init__()
         self.model_name = model_name
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -60,7 +60,7 @@ class Dataloader(pl.LightningDataModule):
             total_data = load_data(self.train_path)
             total_label = label_to_num(total_data["label"].values)
             tokenized_total = tokenized_dataset(total_data, self.tokenizer)
-            total_dataset = Dataset(tokenized_dataset, total_label)
+            total_dataset = Dataset(tokenized_total, total_label)
 
             # StratifiedKFold
             kf = StratifiedKFold(
