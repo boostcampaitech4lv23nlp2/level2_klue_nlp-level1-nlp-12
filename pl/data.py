@@ -56,19 +56,19 @@ class Dataloader(pl.LightningDataModule):
 
     def setup(self, stage="fit"):
         if stage == "fit":
+            # StratifiedKFold
+            kf = StratifiedKFold(
+                n_splits=self.num_splits,
+                shuffle=True,
+                random_state=self.split_seed,
+            )
             # 학습 데이터을 호출
             total_data = load_data(self.train_path)
             total_label = label_to_num(total_data["label"].values)
             tokenized_total = tokenized_dataset(total_data, self.tokenizer)
             total_dataset = Dataset(tokenized_total, total_label)
 
-            # StratifiedKFold
-            kf = StratifiedKFold(
-                n_splits=self.num_splits,
-                shuffle=self.shuffle,
-                random_state=self.split_seed,
-            )
-            all_splits = [k for k in kf.split(total_dataset)]
+            all_splits = [k for k in kf.split(total_dataset,total_label)]
             # k번째 Fold Dataset 선택
             train_indexes, val_indexes = all_splits[self.k]
             train_indexes, val_indexes = train_indexes.tolist(), val_indexes.tolist()
@@ -88,7 +88,7 @@ class Dataloader(pl.LightningDataModule):
             self.test_dataset = Dataset(tokenized_val, val_label)
 
     def train_dataloader(self):
-        return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=self.shuffle)
+        return torch.utils.data.DataLoader(self.train_dataset, batch_size=self.batch_size)
 
     def val_dataloader(self):
         return torch.utils.data.DataLoader(self.val_dataset, batch_size=self.batch_size)

@@ -12,6 +12,8 @@ from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
+import warnings
+warnings.filterwarnings(action='ignore')
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")
@@ -44,9 +46,14 @@ if __name__ == "__main__":
         project=cfg.wandb.wandb_project,
         entity=cfg.wandb.wandb_entity,
     )
+    
+    ck_dir_path = f"/opt/ml/code/pl/checkpoint/{model_name_ch}"
+    if not os.path.exists(ck_dir_path):
+        os.makedirs(ck_dir_path)
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
+        dirpath=ck_dir_path,
         monitor="val_f1",
         save_top_k=1,
         mode="max",
@@ -80,18 +87,20 @@ if __name__ == "__main__":
             logger=wandb_logger,
             callbacks=[checkpoint_callback, earlystopping, RichProgressBar()],
             deterministic=True,
+            limit_train_batches=0.05
         )
         trainer.fit(model=model, datamodule=datamodule)
         score = trainer.test(model=model, datamodule=datamodule)
 
         results.extend(score)
 
-    print("성능은 ",results)
+    # Fold 적용 결과 확인
+    show_result(results)
 
     # 학습이 완료된 모델을 저장합니다.
-    output_dir_path = "output"
+    output_dir_path = "/opt/ml/code/pl/output"
     if not os.path.exists(output_dir_path):
         os.makedirs(output_dir_path)
 
     output_path = os.path.join(output_dir_path, f"{model_name_ch}_{time_now}_model.pt")
-    torch.save(model, output_path)
+    torch.save(model.state_dict(), output_path)

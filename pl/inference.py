@@ -27,8 +27,14 @@ if __name__ == "__main__":
     )
 
     ckpt_path = "/opt/ml/code/pl/checkpoint/klue_bert-base/epoch=0_val_loss=0.68.ckpt"
+    pt_path = "/opt/ml/code/pl/output/klue_bert-base_11291406_model.pt"
 
-    model = Model(cfg).load_from_checkpoint(checkpoint_path=ckpt_path)
+    # for checkpoint
+    # model = Model(cfg).load_from_checkpoint(checkpoint_path=ckpt_path)
+    
+    # for pt
+    # model = Model(cfg)
+    # model.load_state_dict(torch.load(pt_path))
 
     # gpu가 없으면 'gpus=0'을, gpu가 여러개면 'gpus=4'처럼 사용하실 gpu의 개수를 입력해주세요
     trainer = pl.Trainer(

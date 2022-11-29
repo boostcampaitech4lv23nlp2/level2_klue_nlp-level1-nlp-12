@@ -14,6 +14,9 @@ class Model(pl.LightningModule):
 
         self.model_name = config.model.model_name
         self.lr = config.train.learning_rate
+        self.lr_sch_use = config.train.lr_sch_use
+        self.lr_decay_step = config.train.lr_decay_step
+        self.scheduler_name = config.train.scheduler_name
 
         # 사용할 모델을 호출합니다.
         self.plm = transformers.AutoModelForSequenceClassification.from_pretrained(
