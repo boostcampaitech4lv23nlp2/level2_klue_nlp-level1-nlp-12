@@ -84,11 +84,7 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath="/opt/ml/code/level2_klue_nlp-level1-nlp-12/pl/checkpoint",
-        auto_insert_metric_name=True,
-        monitor="val_loss",
-        save_top_k=1,
-        mode="min",
+        dirpath=ck_dir_path, filename="{epoch}_{val_f1:.2f}", monitor="val_f1", save_top_k=1, mode="max"
     )
 
     # Earlystopping
