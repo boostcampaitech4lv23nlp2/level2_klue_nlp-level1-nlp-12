@@ -39,6 +39,7 @@ class Dataloader(pl.LightningDataModule):
         self.train_dataset = None
         self.val_dataset = None
         self.test_dataset = None
+        self.predict_dataset = None
 
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, max_length=200)
 
@@ -59,7 +60,7 @@ class Dataloader(pl.LightningDataModule):
             self.train_dataset = Dataset(tokenized_train, train_label)
             self.val_dataset = Dataset(tokenized_val, val_label)
 
-        else:
+        if stage == "test":
             total_data = load_data(self.train_path)
 
             train_data = total_data.sample(frac=0.9, random_state=self.split_seed)
@@ -69,6 +70,13 @@ class Dataloader(pl.LightningDataModule):
             tokenized_val = tokenized_dataset(val_data, self.tokenizer)
 
             self.test_dataset = Dataset(tokenized_val, val_label)
+
+        if stage == "predict":
+            p_data = load_data(self.test_path)
+            p_label = list(map(int, p_data["label"].values))
+            tokenized_p = tokenized_dataset(p_data, self.tokenizer)
+
+            self.predict_dataset = Dataset(tokenized_p, p_label)
 
     def train_dataloader(self):
         return torch.utils.data.DataLoader(
@@ -83,3 +91,6 @@ class Dataloader(pl.LightningDataModule):
 
     def test_dataloader(self):
         return torch.utils.data.DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers=4)
+
+    def predict_dataloader(self):
+        return torch.utils.data.DataLoader(self.predict_dataset, batch_size=self.batch_size, num_workers=4)
