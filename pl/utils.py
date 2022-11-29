@@ -193,18 +193,19 @@ def show_result(result):
     f1 = 0
     au = 0
 
-    for i,x in enumerate(result):
-            f1 += x['test_f1']
-            au += x['test_auprc']
-            print("----------------------")
-            print(f'{i+1}번 Fold')
-            print(f"F1 score : {x['test_f1']:.2f}")
-            print(f"AUPRC score : {x['test_auprc']:.2f}")
+    for i, x in enumerate(result):
+        f1 += x["test_f1"]
+        au += x["test_auprc"]
+        print("----------------------")
+        print(f"{i+1}번 Fold")
+        print(f"F1 score : {x['test_f1']:.2f}")
+        print(f"AUPRC score : {x['test_auprc']:.2f}")
 
     print("----------------------")
     print(f"Average F1 score : {f1/5:.2f}")
     print(f"Average AUPRC score : {au/5:.2f}")
     print("----------------------")
+
 
 # loss funcion
 # https://discuss.pytorch.org/t/is-this-a-correct-implementation-for-focal-loss-in-pytorch/43327/8
