@@ -72,16 +72,6 @@ class Dataloader(pl.LightningDataModule):
             self.test_dataset = Dataset(tokenized_val, val_label)
 
         if stage == "predict":
-            total_data = load_data(self.train_path)
-
-            train_data = total_data.sample(frac=0.9, random_state=self.split_seed)
-            val_data = total_data.drop(train_data.index)
-
-            val_label = label_to_num(val_data["label"].values)
-            tokenized_val = tokenized_dataset(val_data, self.tokenizer)
-
-            self.test_dataset = Dataset(tokenized_val, val_label)
-
             p_data = load_data(self.test_path)
             p_label = list(map(int, p_data["label"].values))
             tokenized_p = tokenized_dataset(p_data, self.tokenizer)
