@@ -80,10 +80,13 @@ def main(args):
     Tokenizer_NAME = "klue/bert-base"
     tokenizer = AutoTokenizer.from_pretrained(Tokenizer_NAME)
 
+    # ckpt
+    ckpt_path = '/opt/ml/code/pl/checkpoint/klue_bert-base/epoch=0_val_loss=0.68.ckpt'
+
     ## load my model
     MODEL_NAME = args.model_dir  # model dir.
     model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
-    model.parameters
+    model.load_from_checkpoint(ckpt_path=ckpt_path)
     model.to(device)
 
     ## load test datset

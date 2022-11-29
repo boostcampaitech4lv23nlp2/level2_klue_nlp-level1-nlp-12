@@ -13,7 +13,7 @@ train:
     seed: 42
     gpus: 1
     batch_size: 16
-    max_epoch: 1
+    max_epoch: 10
     learning_rate: 1e-5
     logging_step: 5
     nums_folds: 5

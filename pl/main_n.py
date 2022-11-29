@@ -1,12 +1,16 @@
 import argparse
+import os
 import re
+
 from datetime import datetime, timedelta
 
 import torch
 import wandb
 
+from data_n import *
+from model import *
 from omegaconf import OmegaConf
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 
@@ -74,6 +78,10 @@ if __name__ == "__main__":
 
     pl.seed_everything(cfg.train.seed, workers=True)
 
+    ck_dir_path = f"/opt/ml/code/pl/checkpoint/{model_name_ch}"
+    if not os.path.exists(ck_dir_path):
+        os.makedirs(ck_dir_path)
+
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
         dirpath="/opt/ml/code/level2_klue_nlp-level1-nlp-12/pl/checkpoint",
@@ -84,7 +92,7 @@ if __name__ == "__main__":
     )
 
     # Earlystopping
-    earlystopping = EarlyStopping(monitor="val_loss", patience=2, mode="min")
+    earlystopping = EarlyStopping(monitor="val_f1", patience=2, mode="min")
 
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(
@@ -104,10 +112,11 @@ if __name__ == "__main__":
         max_epochs=cfg.train.max_epoch,
         log_every_n_steps=cfg.train.logging_step,
         logger=wandb_logger,  # W&B integration
-        callbacks=[
-            earlystopping,
-        ],
-        deterministic=True
+        callbacks=[earlystopping, checkpoint_callback, RichProgressBar()],
+        deterministic=True,
+        # limit_train_batches=0.15,  # use only 30% of training data
+        # limit_val_batches = 0.01, # use only 1% of val data
+        # limit_train_batches=10    # use only 10 batches of training data
     )
     # trainer = MyTrainer(
     #     accelerator="gpu",
@@ -123,7 +132,7 @@ if __name__ == "__main__":
     # )
 
     trainer.fit(model=model, datamodule=dataloader)
-    trainer.test(model=model, datamodule=dataloader,ckpt_path='best')
+    trainer.test(model=model, datamodule=dataloader, ckpt_path="best")
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "output"
@@ -131,4 +140,4 @@ if __name__ == "__main__":
         os.makedirs(output_dir_path)
 
     output_path = os.path.join(output_dir_path, f"{model_name_ch}_{time_now}_model.pt")
-    torch.save(model, output_path)
+    torch.save(model.state_dict(), output_path)

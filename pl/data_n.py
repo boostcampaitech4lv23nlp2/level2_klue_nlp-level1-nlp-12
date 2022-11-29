@@ -5,10 +5,9 @@ import pandas as pd
 import pytorch_lightning as pl
 import torch
 import transformers
+
 from tqdm.auto import tqdm
-
 from utils import *
-
 
 class Dataset(torch.utils.data.Dataset):
     """Dataset 구성을 위한 Class"""
@@ -40,6 +39,7 @@ class Dataloader(pl.LightningDataModule):
         self.train_dataset = None
         self.val_dataset = None
         self.test_dataset = None
+        self.predict_dataset = None
 
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, max_length=200)
 
@@ -60,7 +60,7 @@ class Dataloader(pl.LightningDataModule):
             self.train_dataset = Dataset(tokenized_train, train_label)
             self.val_dataset = Dataset(tokenized_val, val_label)
 
-        else:
+        if stage == "test":
             total_data = load_data(self.train_path)
 
             train_data = total_data.sample(frac=0.9, random_state=self.split_seed)
@@ -70,6 +70,23 @@ class Dataloader(pl.LightningDataModule):
             tokenized_val = tokenized_dataset(val_data, self.tokenizer)
 
             self.test_dataset = Dataset(tokenized_val, val_label)
+
+        if stage == "predict":
+            total_data = load_data(self.train_path)
+
+            train_data = total_data.sample(frac=0.9, random_state=self.split_seed)
+            val_data = total_data.drop(train_data.index)
+
+            val_label = label_to_num(val_data["label"].values)
+            tokenized_val = tokenized_dataset(val_data, self.tokenizer)
+
+            self.test_dataset = Dataset(tokenized_val, val_label)
+
+            p_data = load_data(self.test_path)
+            p_label = list(map(int, p_data["label"].values))
+            tokenized_p = tokenized_dataset(p_data, self.tokenizer)
+
+            self.predict_dataset = Dataset(tokenized_p, p_label)
 
     def train_dataloader(self):
         return torch.utils.data.DataLoader(
@@ -84,3 +101,6 @@ class Dataloader(pl.LightningDataModule):
 
     def test_dataloader(self):
         return torch.utils.data.DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers=4)
+
+    def predict_dataloader(self):
+        return torch.utils.data.DataLoader(self.predict_dataset, batch_size=self.batch_size, num_workers=4)
