@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # for checkpoint
     # model = Model(cfg).load_from_checkpoint(checkpoint_path=ckpt_path)
-    
+
     # for pt
     # model = Model(cfg)
     # model.load_state_dict(torch.load(pt_path))
