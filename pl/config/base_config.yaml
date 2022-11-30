@@ -17,11 +17,10 @@ train:
     learning_rate: 4.78e-5
     logging_step: 5
     nums_folds: 5
-    loss_name: focal # CrossEntropy, focal, label_smoothing, f1
+    loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
     lr_sch_use: False
     lr_decay_step: 20
-    scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR
     scheduler_name: constant_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
     lr_weight_decay: True
     
