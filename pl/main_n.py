@@ -1,21 +1,16 @@
 import argparse
 import re
-import warnings
 
 from datetime import datetime, timedelta
 
-import wandb
-
+from data_n import *
+from model import *
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 
-
-warnings.filterwarnings(action="ignore")
-
-from data_n import *
-from model import *
+import wandb
 
 
 time_ = datetime.now() + timedelta(hours=9)
@@ -37,7 +32,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="base_config")
     args, _ = parser.parse_known_args()
 
-    cfg = OmegaConf.load(f"./config/{args.config}.yaml")
+    cfg = OmegaConf.load(f"/opt/ml/code/pl/config/{args.config}.yaml")
 
     # os.environ["WANDB_API_KEY"] = wandb_dict[cfg.wandb.wandb_username]
     wandb.login(key=wandb_dict[cfg.wandb.wandb_username])
@@ -57,9 +52,6 @@ if __name__ == "__main__":
         auto_insert_metric_name=True,
         monitor="val_loss",
         save_top_k=1,
-        save_last=True,
-        save_weights_only=False,
-        verbose=False,
         mode="min",
     )
 

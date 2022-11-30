@@ -5,13 +5,13 @@ from load_data import *
 import pandas as pd
 import torch
 import torch.nn.functional as F
-
+import pickle
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-
+import argparse
 from load_data import RE_Dataset, load_data, tokenized_dataset
-
+import numpy as np
 
 def inference(model, tokenized_sent, device):
     """
@@ -97,6 +97,7 @@ def main(args):
   output.to_csv('../prediction/submission_unfixed.csv', index=False) # 최종적으로 완성된 예측한 라벨 csv 파일 형태로 저장.
   #### 필수!! ##############################################
   print('---- Finish! ----')
+  
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   
