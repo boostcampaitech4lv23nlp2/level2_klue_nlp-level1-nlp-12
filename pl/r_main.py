@@ -8,11 +8,11 @@ import torch
 import wandb
 
 from data_n import *
-from r_roberta import *
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
+from r_roberta import *
 
 time_ = datetime.now() + timedelta(hours=9)
 time_now = time_.strftime("%m%d%H%M")

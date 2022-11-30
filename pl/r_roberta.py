@@ -25,6 +25,7 @@ class FCLayer(pl.LightningModule):
             x = self.tanh(x)
         return self.linear(x)
 
+
 class Model(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
@@ -41,16 +42,16 @@ class Model(pl.LightningModule):
         self.num_classes = 30
 
         # 사용할 모델을 호출합니다.
-        self.plm = transformers.RobertaModel.from_pretrained(self.model_name,add_pooling_layer=False)
-        self.cls_fc = FCLayer(self.hidden_size, self.hidden_size//2, self.dr_rate)
-        self.sentence_fc = FCLayer(self.hidden_size, self.hidden_size//2, self.dr_rate)
-        self.label_classifier = FCLayer(self.hidden_size//2 * 3, self.num_classes, self.dr_rate, False)
+        self.plm = transformers.RobertaModel.from_pretrained(self.model_name, add_pooling_layer=False)
+        self.cls_fc = FCLayer(self.hidden_size, self.hidden_size // 2, self.dr_rate)
+        self.sentence_fc = FCLayer(self.hidden_size, self.hidden_size // 2, self.dr_rate)
+        self.label_classifier = FCLayer(self.hidden_size // 2 * 3, self.num_classes, self.dr_rate, False)
 
         # Loss 계산을 위해 사용될 CE Loss를 호출합니다.
         self.loss_func = criterion_entrypoint(config.train.loss_name)
         self.optimizer_name = config.train.optimizer_name
 
-    def forward(self,x):
+    def forward(self, x):
         out = self.plm(
             input_ids=x["input_ids"],
             attention_mask=x["attention_mask"],
@@ -59,22 +60,22 @@ class Model(pl.LightningModule):
 
         sentence_end_position = torch.where(x["input_ids"] == 2)[1]
         sent1_end, sent2_end = sentence_end_position[0], sentence_end_position[1]
-        
-        cls_vector = out[:, 0, :] # take <s> token (equiv. to [CLS])
-        prem_vector = out[:,1:sent1_end]              # Get Premise vector
-        hypo_vector = out[:,sent1_end+1:sent2_end]    # Get Hypothesis vector
 
-        prem_vector = torch.mean(prem_vector, dim=1) # Average
+        cls_vector = out[:, 0, :]  # take <s> token (equiv. to [CLS])
+        prem_vector = out[:, 1:sent1_end]  # Get Premise vector
+        hypo_vector = out[:, sent1_end + 1 : sent2_end]  # Get Hypothesis vector
+
+        prem_vector = torch.mean(prem_vector, dim=1)  # Average
         hypo_vector = torch.mean(hypo_vector, dim=1)
-        
+
         # Dropout -> tanh -> fc_layer (Share FC layer for premise and hypothesis)
         cls_embedding = self.cls_fc(cls_vector)
         prem_embedding = self.sentence_fc(prem_vector)
         hypo_embedding = self.sentence_fc(hypo_vector)
-        
+
         # Concat -> fc_layer
         concat_embedding = torch.cat([cls_embedding, prem_embedding, hypo_embedding], dim=-1)
-        
+
         return self.label_classifier(concat_embedding)
 
     def training_step(self, batch, batch_idx):
@@ -142,11 +143,7 @@ class Model(pl.LightningModule):
     def configure_optimizers(self):
         opt_module = getattr(import_module("torch.optim"), self.optimizer_name)
         if self.lr_weight_decay:
-            optimizer = opt_module(
-                filter(lambda p: p.requires_grad, self.parameters()),
-                lr=self.lr,
-                weight_decay=0.01
-            )
+            optimizer = opt_module(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr, weight_decay=0.01)
         else:
             optimizer = opt_module(
                 filter(lambda p: p.requires_grad, self.parameters()),
@@ -154,7 +151,7 @@ class Model(pl.LightningModule):
                 # weight_decay=5e-4
             )
         if self.lr_sch_use:
-            t_total = 2030 * 7 # train_dataloader len, epochs
+            t_total = 2030 * 7  # train_dataloader len, epochs
             warmup_step = int(t_total * 0.1)
 
             _scheduler_dic = {
@@ -162,10 +159,12 @@ class Model(pl.LightningModule):
                 "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
                 "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
                 "constant_warmup": transformers.get_constant_schedule_with_warmup(optimizer, 100),
-                "cosine_warmup" : transformers.get_cosine_schedule_with_warmup(optimizer,num_warmup_steps=10, num_training_steps=t_total)
+                "cosine_warmup": transformers.get_cosine_schedule_with_warmup(
+                    optimizer, num_warmup_steps=10, num_training_steps=t_total
+                ),
             }
             scheduler = _scheduler_dic[self.scheduler_name]
-            
+
             return [optimizer], [scheduler]
         else:
             return optimizer

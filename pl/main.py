@@ -63,12 +63,12 @@ if __name__ == "__main__":
 
     # Earlystopping
     earlystopping = EarlyStopping(monitor="val_f1", patience=2, mode="max")
-    
+
     model = Model(cfg)
     results = []
 
     for k in range(cfg.train.nums_folds):
-        
+
         datamodule = Dataloader(
             cfg.model.model_name,
             cfg.train.batch_size,
@@ -89,7 +89,7 @@ if __name__ == "__main__":
             logger=wandb_logger,
             callbacks=[checkpoint_callback, earlystopping, RichProgressBar()],
             deterministic=True,
-            # limit_train_batches=0.05, 
+            # limit_train_batches=0.05,
         )
         trainer.fit(model=model, datamodule=datamodule)
         score = trainer.test(model=model, datamodule=datamodule, ckpt_path="best")
