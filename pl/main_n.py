@@ -30,31 +30,6 @@ wandb_dict = {
 }
 
 
-class MyTrainer(pl.Trainer):
-    # loss_name 이라는 인자를 추가로 받아 self에 각인 시켜줍니다.
-    def __init__(self, loss_name, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.loss_name = loss_name  # 각인!
-
-    def compute_loss(self, model, inputs, return_outputs=False):
-        # custom_loss = criterion_entrypoint(self.loss_name)
-        if self.loss_name == "CrossEntropy":
-            # lossname이 CrossEntropy 이면, custom_loss에 torch.nn.CrossEntropyLoss()를 선언(?) 해줍니다.
-            custom_loss = torch.nn.MSELoss()
-
-        if self.label_smoother is not None and "labels" in inputs:
-            labels = inputs.pop("labels")
-        else:
-            labels = None
-        outputs = model(**inputs)
-
-        if labels is not None:
-            # loss를 계산 하던 부분에 custom_loss를 이용해 계산하는 코드를 넣기
-            loss = custom_loss(outputs[0], labels)
-        else:
-            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
-        return (loss, outputs) if return_outputs else loss
-
 
 if __name__ == "__main__":
     # 하이퍼 파라미터 등 각종 설정값을 입력받습니다
@@ -84,11 +59,11 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath=ck_dir_path, filename="{epoch}_{val_loss:.4f}", monitor="val_loss", save_top_k=1, mode="min"
+        dirpath=ck_dir_path, filename="{epoch}_{val_f1:.4f}", monitor="val_f1", save_top_k=1, mode="max"
     )
 
     # Earlystopping
-    earlystopping = EarlyStopping(monitor="val_loss", patience=3, mode="min")
+    earlystopping = EarlyStopping(monitor="val_f1", patience=3, mode="max")
 
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(
@@ -114,18 +89,6 @@ if __name__ == "__main__":
         # limit_val_batches = 0.01, # use only 1% of val data
         # limit_train_batches=10    # use only 10 batches of training data
     )
-    # trainer = MyTrainer(
-    #     accelerator="gpu",
-    #     devices=1,
-    #     max_epochs=cfg.train.max_epoch,
-    #     log_every_n_steps=cfg.train.logging_step,
-    #     logger=wandb_logger,  # W&B integration
-    #     callbacks=[
-    #         earlystopping,
-    #     ],
-    #     deterministic=True,
-    #     loss_name="CrossEntropy",  # CrossEntropy, focal, label_smoothing, f1
-    # )
 
     trainer.fit(model=model, datamodule=dataloader)
     trainer.test(model=model, datamodule=dataloader, ckpt_path="best")

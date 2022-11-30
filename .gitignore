@@ -215,3 +215,12 @@ pl/re_temp/
 
 CoRE/
 pl/tt.ipynb
+
+pl/config/electra_ce_origin.yaml
+pl/config/electra_ce_yong.yaml
+pl/config/electra_label_origin.yaml
+pl/config/electra_label_yong.yaml
+pl/data_n_r.py
+pl/model_r.py
+pl/model_r_torch.py
+pl/utils_r.py
