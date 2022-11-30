@@ -16,6 +16,10 @@ class Model(pl.LightningModule):
 
         self.model_name = config.model.model_name
         self.lr = config.train.learning_rate
+        self.lr_sch_use = config.train.lr_sch_use
+        self.lr_decay_step = config.train.lr_decay_step
+        self.scheduler_name = config.train.scheduler_name
+        self.lr_weight_decay = config.train.lr_weight_decay
 
         # 사용할 모델을 호출합니다.
         self.plm = transformers.AutoModelForSequenceClassification.from_pretrained(
@@ -56,7 +60,8 @@ class Model(pl.LightningModule):
         loss = self.loss_func(logits, y.long())
 
         f1, accuracy = n_compute_metrics(logits, y).values()
-        self.log("val", {"loss": loss, "accuracy": accuracy})
+        self.log("val_loss", loss)
+        self.log("val_accuracy", accuracy)
         self.log("val_f1", f1, on_step=True)
 
         return {"logits": logits, "y": y}
@@ -105,18 +110,27 @@ class Model(pl.LightningModule):
 
     def configure_optimizers(self):
         opt_module = getattr(import_module("torch.optim"), self.optimizer_name)
-        optimizer = opt_module(
-            filter(lambda p: p.requires_grad, self.parameters()),
-            lr=self.lr,
-            # weight_decay=5e-4
-        )
+        if self.lr_weight_decay:
+            optimizer = opt_module(
+                filter(lambda p: p.requires_grad, self.parameters()),
+                lr=self.lr,
+                weight_decay=0.01
+            )
+        else:
+            optimizer = opt_module(
+                filter(lambda p: p.requires_grad, self.parameters()),
+                lr=self.lr,
+                # weight_decay=5e-4
+            )
         if self.lr_sch_use:
             _scheduler_dic = {
                 "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, self.lr_decay_step, gamma=0.5),
                 "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
                 "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
+                "constant_warmup": transformers.get_constant_schedule_with_warmup(optimizer, 100)
             }
             scheduler = _scheduler_dic[self.scheduler_name]
+            
             return [optimizer], [scheduler]
         else:
             return optimizer

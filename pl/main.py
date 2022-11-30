@@ -55,9 +55,9 @@ if __name__ == "__main__":
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
         dirpath=ck_dir_path,
-        monitor="val_f1",
+        monitor="val_loss",
         save_top_k=1,
-        mode="max",
+        mode="min",
     )
 
     # Earlystopping

@@ -1,6 +1,7 @@
 path:
-    train_path: /opt/ml/code/level2_klue_nlp-level1-nlp-12/dataset/train/train_origin.csv
-    test_path: /opt/ml/code/level2_klue_nlp-level1-nlp-12/dataset/test/test_data.csv
+    train_path: ../../dataset/train/train.csv
+    test_path: ../../dataset/test/test_data.csv
+
 data:
     shuffle: True
     augmentation: # adea, bt 등등
@@ -13,19 +14,18 @@ train:
     seed: 42
     gpus: 1
     batch_size: 16
-    max_epoch: 20
-    learning_rate: 4.78e-5
+    max_epoch: 10
+    learning_rate: 2.1216154368926846e-05
     logging_step: 5
     nums_folds: 5
-    loss_name: focal # CrossEntropy, focal, label_smoothing, f1
+    loss_name: f1 # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
     lr_sch_use: False
     lr_decay_step: 20
-    scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR
     scheduler_name: constant_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
     lr_weight_decay: True
     
 wandb:
-    wandb_username: seokhee
-    wandb_project: re_temp
+    wandb_username: rion_
+    wandb_project: huggingface
     wandb_entity: re_et

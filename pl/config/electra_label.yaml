@@ -1,0 +1,31 @@
+path:
+    train_path: ../../dataset/train/train.csv
+    test_path: ../../dataset/test/test_data.csv
+
+data:
+    shuffle: True
+    augmentation: # adea, bt 등등
+    
+model:
+    model_name: snunlp/KR-ELECTRA-discriminator
+    saved_name: base
+
+train:
+    seed: 42
+    gpus: 1
+    batch_size: 64
+    max_epoch: 10
+    learning_rate: 4.487453899331321e-05
+    logging_step: 5
+    nums_folds: 5
+    loss_name: label_smoothing # CrossEntropy, focal, label_smoothing, f1
+    optimizer_name: AdamW
+    lr_sch_use: False
+    lr_decay_step: 20
+    scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR
+    lr_weight_decay: True
+
+wandb:
+    wandb_username: rion_
+    wandb_project: huggingface
+    wandb_entity: re_et
