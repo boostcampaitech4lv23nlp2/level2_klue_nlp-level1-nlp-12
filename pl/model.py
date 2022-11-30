@@ -112,11 +112,15 @@ class Model(pl.LightningModule):
                 # weight_decay=5e-4
             )
         if self.lr_sch_use:
+            t_total = 2030 * 7 # train_dataloader len, epochs
+            warmup_step = int(t_total * 0.1)
+
             _scheduler_dic = {
                 "StepLR": torch.optim.lr_scheduler.StepLR(optimizer, self.lr_decay_step, gamma=0.5),
                 "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
                 "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
-                "constant_warmup": transformers.get_constant_schedule_with_warmup(optimizer, 100)
+                "constant_warmup": transformers.get_constant_schedule_with_warmup(optimizer, 100),
+                "cosine_warmup" : transformers.get_cosine_schedule_with_warmup(optimizer,num_warmup_steps=10, num_training_steps=t_total)
             }
             scheduler = _scheduler_dic[self.scheduler_name]
             
