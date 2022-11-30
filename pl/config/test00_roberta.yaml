@@ -1,5 +1,5 @@
 path:
-    train_path: ../../dataset/train/aug_kjk.csv       # 엔터티 추가
+    train_path: ../../dataset/train/train.csv
     test_path: ../../dataset/test/test_data.csv
 
 data:
@@ -8,7 +8,7 @@ data:
 
 model:
     model_name: klue/roberta-large
-    saved_name: roberta-large/add_entities
+    saved_name: roberta-large/orig
 
 train:
     seed: 42
