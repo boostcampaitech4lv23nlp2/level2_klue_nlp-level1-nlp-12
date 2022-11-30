@@ -5,28 +5,27 @@ path:
 data:
     shuffle: True
     augmentation: # adea, bt 등등
-
+    
 model:
-    model_name: klue/roberta-base
-    saved_name: roberta-base_original
+    model_name: snunlp/KR-ELECTRA-discriminator
+    saved_name: base
 
 train:
     seed: 42
     gpus: 1
-    batch_size: 16
-    max_epoch: 3
-    learning_rate: 1e-5
+    batch_size: 64
+    max_epoch: 10
+    learning_rate: 4.487453899331321e-05
     logging_step: 5
     nums_folds: 5
-    loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
+    loss_name: focal # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
     lr_sch_use: False
     lr_decay_step: 20
     scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR
-    scheduler_name: constant_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
     lr_weight_decay: True
-    
+
 wandb:
-    wandb_username: dk100
-    wandb_project: lv2_personal_test
-    wandb_entity: dk100
+    wandb_username: rion_
+    wandb_project: huggingface
+    wandb_entity: re_et

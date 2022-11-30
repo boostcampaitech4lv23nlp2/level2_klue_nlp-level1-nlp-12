@@ -53,11 +53,11 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath=ck_dir_path, filename="{epoch}_{val_f1:.2f}", monitor="val_f1", save_top_k=1, mode="max"
+        dirpath=ck_dir_path, filename="{epoch}_{val_loss:.4f}", monitor="val_loss", save_top_k=1, mode="min"
     )
 
     # Earlystopping
-    earlystopping = EarlyStopping(monitor="val_f1", patience=2, mode="min")
+    earlystopping = EarlyStopping(monitor="val_loss", patience=3, mode="min")
 
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         logger=wandb_logger,  # W&B integration
         callbacks=[earlystopping, checkpoint_callback, RichProgressBar()],
         deterministic=True,
-        # limit_train_batches=0.15,  # use only 30% of training data
+        # limit_train_batches=0.15,  # use only 15% of training data
         # limit_val_batches = 0.01, # use only 1% of val data
         # limit_train_batches=10    # use only 10 batches of training data
     )
