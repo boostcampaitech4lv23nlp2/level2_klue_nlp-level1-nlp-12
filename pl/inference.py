@@ -26,8 +26,8 @@ if __name__ == "__main__":
         cfg.train.seed,
     )
 
-    ckpt_path = "/opt/ml/code/pl/checkpoint/snunlp_KR-ELECTRA-discriminator/epoch=2-step=1218.ckpt"
-    pt_path = "/opt/ml/code/pl/output/snunlp_KR-ELECTRA-discriminator_11300045_model.pt"
+    ckpt_path = "/opt/ml/code/pl/checkpoint/klue_roberta-large/epoch=7_val_loss=0.5319.ckpt"
+    pt_path = "/opt/ml/code/pl/output/klue_roberta-large_11302158_model.pt"
 
     # for checkpoint
     # model = Model(cfg).load_from_checkpoint(checkpoint_path=ckpt_path)
