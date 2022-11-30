@@ -7,25 +7,25 @@ data:
     augmentation: # adea, bt 등등
     
 model:
-    model_name: klue/bert-base
+    model_name: snunlp/KR-ELECTRA-discriminator
     saved_name: base
 
 train:
     seed: 42
     gpus: 1
-    batch_size: 16
-    max_epoch: 1
-    learning_rate: 1e-5
+    batch_size: 64
+    max_epoch: 10
+    learning_rate: 4.487453899331321e-05
     logging_step: 5
     nums_folds: 5
-    loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
+    loss_name: label_smoothing # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
     lr_sch_use: False
     lr_decay_step: 20
-    scheduler_name: constant_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
+    scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR
     lr_weight_decay: True
-    
+
 wandb:
     wandb_username: rion_
-    wandb_project: re_temp
+    wandb_project: huggingface
     wandb_entity: re_et

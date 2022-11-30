@@ -7,25 +7,25 @@ data:
     augmentation: # adea, bt 등등
     
 model:
-    model_name: klue/bert-base
-    saved_name: base
+    model_name: klue/roberta-large
+    saved_name: roberta_fold
 
 train:
     seed: 42
     gpus: 1
     batch_size: 16
-    max_epoch: 1
-    learning_rate: 1e-5
-    logging_step: 5
+    max_epoch: 10
+    learning_rate: 2.1216154368926846e-5
+    logging_step: 10
     nums_folds: 5
     loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
-    lr_sch_use: False
+    lr_sch_use: True
     lr_decay_step: 20
-    scheduler_name: constant_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
+    scheduler_name: cosine_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup, cosine_warmup
     lr_weight_decay: True
     
 wandb:
     wandb_username: rion_
-    wandb_project: re_temp
+    wandb_project: huggingface
     wandb_entity: re_et
