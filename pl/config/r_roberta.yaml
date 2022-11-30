@@ -20,7 +20,7 @@ train:
     nums_folds: 5
     loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
-    lr_sch_use: True
+    lr_sch_use: False
     lr_decay_step: 20
     scheduler_name: cosine_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup, cosine_warmup
     lr_weight_decay: True

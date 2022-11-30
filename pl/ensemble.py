@@ -64,11 +64,12 @@ if __name__ == "__main__":
     # Earlystopping
     earlystopping = EarlyStopping(monitor="val_f1", patience=2, mode="max")
     
-    model = Model(cfg)
-    results = []
+    probs = []
+    result = []
 
     for k in range(cfg.train.nums_folds):
-        
+        model = Model(cfg)
+
         datamodule = Dataloader(
             cfg.model.model_name,
             cfg.train.batch_size,
@@ -94,10 +95,15 @@ if __name__ == "__main__":
         trainer.fit(model=model, datamodule=datamodule)
         score = trainer.test(model=model, datamodule=datamodule, ckpt_path="best")
 
-        results.extend(score)
+        logits = trainer.predict(model=model, datamodule=datamodule)
+        logits = torch.cat([x for x in logits])
+        prob = F.softmax(logits, dim=-1).tolist()
+
+        probs.extend(prob)
+        result.extend(score)
 
     # Fold 적용 결과 확인
-    show_result(results)
+    show_result(result)
 
     # 학습이 완료된 모델을 저장합니다.
     output_dir_path = "/opt/ml/code/pl/output"
