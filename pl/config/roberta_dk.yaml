@@ -1,28 +1,28 @@
 path:
-    train_path: ../../dataset/train/aug_entities.csv       # 엔터티 추가
+    train_path: ../../dataset/train/aug_entities.csv 
     test_path: ../../dataset/test/test_data.csv
 
 data:
     shuffle: True
     augmentation: # adea, bt 등등
-
+    
 model:
     model_name: klue/roberta-large
-    saved_name: roberta-large/add_entities
+    saved_name: roberta_add_entities
 
 train:
     seed: 42
     gpus: 1
     batch_size: 16
-    max_epoch: 3
-    learning_rate: 2.1216154368926846e-05
-    logging_step: 5
+    max_epoch: 10
+    learning_rate: 2.1216154368926846e-5
+    logging_step: 10
     nums_folds: 5
     loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
-    lr_sch_use: False
+    lr_sch_use: True
     lr_decay_step: 20
-    scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
+    scheduler_name: cosine_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup, cosine_warmup
     lr_weight_decay: True
     
 wandb:

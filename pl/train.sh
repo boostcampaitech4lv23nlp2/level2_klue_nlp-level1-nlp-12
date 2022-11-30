@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIGS=("base_config")
+CONFIGS=("test02_entities")
 
 config_length=${#CONFIGS[@]}
 
