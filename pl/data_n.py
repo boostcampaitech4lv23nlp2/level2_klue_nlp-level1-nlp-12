@@ -56,8 +56,14 @@ class Dataloader(pl.LightningDataModule):
 
             tokenized_train = tokenized_dataset(train_data, self.tokenizer)
             tokenized_val = tokenized_dataset(val_data, self.tokenizer)
-
-            self.train_dataset = Dataset(tokenized_train, train_label)
+            
+            #추가사항
+            kjk_train_data = kjk_load_data(self.train_path)
+            kjk_label = label_to_num(kjk_train_data["label"].values)
+            kjk_tokenized_train = tokenized_dataset(kjk_train_data, self.tokenizer)
+            
+            #self.train_dataset = Dataset(tokenized_train, train_label)
+            self.train_dataset = Dataset(kjk_tokenized_train, kjk_label)
             self.val_dataset = Dataset(tokenized_val, val_label)
 
         if stage == "test":

@@ -1,9 +1,5 @@
 #!/bin/bash
-<<<<<<< HEAD
-CONFIGS=("hanja_config")
-=======
-CONFIGS=("roberta")
->>>>>>> v1.4.4
+CONFIGS=("base_config")
 
 config_length=${#CONFIGS[@]}
 

@@ -1,5 +1,5 @@
 path:
-    train_path: ../../dataset/train/train.csv
+    train_path: ../../dataset/train/aug_kjk.csv       # 엔터티 추가
     test_path: ../../dataset/test/test_data.csv
 
 data:
@@ -8,7 +8,7 @@ data:
 
 model:
     model_name: klue/roberta-base
-    saved_name: roberta-base_re_test
+    saved_name: roberta-base_add_entities
 
 train:
     seed: 42
@@ -22,7 +22,7 @@ train:
     optimizer_name: AdamW
     lr_sch_use: False
     lr_decay_step: 20
-    scheduler_name: StepLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
+    scheduler_name: constant_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
     lr_weight_decay: True
     
 wandb:

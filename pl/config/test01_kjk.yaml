@@ -1,5 +1,5 @@
 path:
-    train_path: ../../dataset/train/train.csv
+    train_path: ../../dataset/train/aug_kjk.csv       # 추가 데이터
     test_path: ../../dataset/test/test_data.csv
 
 data:
@@ -8,7 +8,7 @@ data:
 
 model:
     model_name: klue/roberta-base
-    saved_name: roberta-base_re_test
+    saved_name: roberta-base_kjk_StepLR
 
 train:
     seed: 42
