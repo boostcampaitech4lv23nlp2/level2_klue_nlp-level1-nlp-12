@@ -8,7 +8,7 @@ data:
     
 model:
     model_name: klue/roberta-large
-    saved_name: roberta_add_entities
+    saved_name: roberta-large/add_entities_re
 
 train:
     seed: 42
