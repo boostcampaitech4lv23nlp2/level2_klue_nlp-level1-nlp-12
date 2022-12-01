@@ -5,8 +5,10 @@ torch==1.12.1
 numpy==1.20.3
 glances
 omegaconf
-wandb
+wandb==0.13.4
 torchmetrics==0.10.0
 pytorch-lightning==1.7.3
 tqdm==4.64.1
 pyYAML==5.4.1
+rich
+matplotlib
