@@ -7,6 +7,25 @@ import transformers
 
 from utils import criterion_entrypoint, klue_re_auprc, klue_re_micro_f1, n_compute_metrics
 
+class FCLayer(pl.LightningModule):
+    def __init__(self, input_dim, output_dim, dropout_rate=0.0, use_activation=True):
+        super().__init__()
+        self.save_hyperparameters()
+
+        self.use_activation = use_activation
+        self.dropout = torch.nn.Dropout(dropout_rate)
+        self.linear = torch.nn.Linear(input_dim, output_dim)
+        self.tanh = torch.nn.Tanh()
+
+        torch.nn.init.xavier_uniform_(self.linear.weight)
+
+    def forward(self, x):
+        x = self.dropout(x)
+        if self.use_activation:
+            x = self.tanh(x)
+        return self.linear(x)
+
+
 class Model(pl.LightningModule):
     def __init__(self, config):
         super().__init__()
@@ -18,22 +37,46 @@ class Model(pl.LightningModule):
         self.lr_decay_step = config.train.lr_decay_step
         self.scheduler_name = config.train.scheduler_name
         self.lr_weight_decay = config.train.lr_weight_decay
+        self.dr_rate = 0
+        self.hidden_size = 1024
+        self.num_classes = 30
 
         # 사용할 모델을 호출합니다.
-        self.plm = transformers.AutoModelForSequenceClassification.from_pretrained(
-            pretrained_model_name_or_path=self.model_name, num_labels=30
-        )
+        self.plm = transformers.RobertaModel.from_pretrained(self.model_name, add_pooling_layer=False)
+        self.cls_fc = FCLayer(self.hidden_size, self.hidden_size // 2, self.dr_rate)
+        self.sentence_fc = FCLayer(self.hidden_size, self.hidden_size // 2, self.dr_rate)
+        self.label_classifier = FCLayer(self.hidden_size // 2 * 3, self.num_classes, self.dr_rate, False)
+
         # Loss 계산을 위해 사용될 CE Loss를 호출합니다.
         self.loss_func = criterion_entrypoint(config.train.loss_name)
         self.optimizer_name = config.train.optimizer_name
 
     def forward(self, x):
-        x = self.plm(
+        out = self.plm(
             input_ids=x["input_ids"],
             attention_mask=x["attention_mask"],
             token_type_ids=x["token_type_ids"],
-        )
-        return x["logits"]
+        )[0]
+
+        sentence_end_position = torch.where(x["input_ids"] == 2)[1]
+        sent1_end, sent2_end = sentence_end_position[0], sentence_end_position[1]
+
+        cls_vector = out[:, 0, :]  # take <s> token (equiv. to [CLS])
+        prem_vector = out[:, 1:sent1_end]  # Get Premise vector
+        hypo_vector = out[:, sent1_end + 1 : sent2_end]  # Get Hypothesis vector
+
+        prem_vector = torch.mean(prem_vector, dim=1)  # Average
+        hypo_vector = torch.mean(hypo_vector, dim=1)
+
+        # Dropout -> tanh -> fc_layer (Share FC layer for premise and hypothesis)
+        cls_embedding = self.cls_fc(cls_vector)
+        prem_embedding = self.sentence_fc(prem_vector)
+        hypo_embedding = self.sentence_fc(hypo_vector)
+
+        # Concat -> fc_layer
+        concat_embedding = torch.cat([cls_embedding, prem_embedding, hypo_embedding], dim=-1)
+
+        return self.label_classifier(concat_embedding)
 
     def training_step(self, batch, batch_idx):
         x = batch
