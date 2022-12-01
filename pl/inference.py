@@ -27,7 +27,7 @@ if __name__ == "__main__":
     )
 
     ckpt_path = "/opt/ml/code/pl/checkpoint/snunlp_KR-ELECTRA-discriminator/epoch=2-step=1218.ckpt"
-    pt_path = "/opt/ml/code/pl/output/snunlp_KR-ELECTRA-discriminator_11300045_model.pt"
+    pt_path = "/opt/ml/code/pl/output/monologg_kobigbird-bert-base_12011554_model.pt"
 
     # for checkpoint
     # model = Model(cfg).load_from_checkpoint(checkpoint_path=ckpt_path)
