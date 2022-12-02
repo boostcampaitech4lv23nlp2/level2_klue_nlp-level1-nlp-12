@@ -30,10 +30,10 @@ if __name__ == "__main__":
     # 터미널 실행 예시 : python3 run.py --batch_size=64 ...
     # 실행 시 '--batch_size=64' 같은 인자를 입력하지 않으면 default 값이 기본으로 실행됩니다
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="base_config")
+    parser.add_argument("--config", type=str, default="bigbird_cet")
     args, _ = parser.parse_known_args()
 
-    cfg = OmegaConf.load(f"/opt/ml/code/pl/config/{args.config}.yaml")
+    cfg = OmegaConf.load(f"/opt/ml/code/level2_klue_nlp_level1_nlp_12/pl/config/{args.config}.yaml")
 
     # os.environ["WANDB_API_KEY"] = wandb_dict[cfg.wandb.wandb_username]
     wandb.login(key=wandb_dict[cfg.wandb.wandb_username])
@@ -47,17 +47,17 @@ if __name__ == "__main__":
 
     pl.seed_everything(cfg.train.seed, workers=True)
 
-    ck_dir_path = f"/opt/ml/code/pl/checkpoint/{model_name_ch}"
+    ck_dir_path = f"/opt/ml/code/level2_klue_nlp_level1_nlp_12/pl/checkpoint/{model_name_ch}"
     if not os.path.exists(ck_dir_path):
         os.makedirs(ck_dir_path)
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath=ck_dir_path, filename="{epoch}_{val_loss:.4f}", monitor="val_loss", save_top_k=1, mode="min"
+        dirpath=ck_dir_path, filename="{epoch}_{val_loss:.4f}", monitor="val_f1", save_top_k=1, mode="max"
     )
 
     # Earlystopping
-    earlystopping = EarlyStopping(monitor="val_loss", patience=3, mode="min")
+    earlystopping = EarlyStopping(monitor="val_f1", patience=2, mode="max")
 
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(

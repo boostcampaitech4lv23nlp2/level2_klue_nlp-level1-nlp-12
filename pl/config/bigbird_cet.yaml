@@ -22,10 +22,10 @@ train:
     optimizer_name: AdamW
     lr_sch_use: False
     lr_decay_step: 20
-    scheduler_name: constant_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
+    scheduler_name: CosineAnnealingLR # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup
     lr_weight_decay: True
     
 wandb:
-    wandb_username: rion_
+    wandb_username: daniel0801
     wandb_project: huggingface
     wandb_entity: re_et

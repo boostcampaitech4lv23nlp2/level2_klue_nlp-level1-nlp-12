@@ -26,6 +26,6 @@ train:
     lr_weight_decay: True
     
 wandb:
-    wandb_username: rion_
+    wandb_username: daniel0801
     wandb_project: huggingface
     wandb_entity: re_et
