@@ -194,7 +194,6 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python
 
-EDA.ipynb
 base_code/
 dataset/
 pl/output/
