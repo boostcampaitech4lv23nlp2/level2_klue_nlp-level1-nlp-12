@@ -13,9 +13,6 @@ from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
-
-from data_n import *
-from model import *
 from transformers import TrainingArguments
 
 time_ = datetime.now() + timedelta(hours=9)
@@ -28,7 +25,6 @@ wandb_dict = {
     "seokhee": "c79d118b300d6cff52a644b8ae6ab0933723a59f",
     "dk100": "263b9353ecef00e35bdf063a51a82183544958cc",
 }
-
 
 
 if __name__ == "__main__":

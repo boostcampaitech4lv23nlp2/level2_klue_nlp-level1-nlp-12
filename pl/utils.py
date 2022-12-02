@@ -1,5 +1,7 @@
 import pickle
 
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
 import sklearn
@@ -9,6 +11,10 @@ import torch.nn.functional as F
 
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from tqdm.auto import tqdm
+
+time_ = datetime.now() + timedelta(hours=9)
+time_now = time_.strftime("%m%d%H%M")
+
 
 def preprocessing_dataset(dataset):
     """처음 불러온 csv 파일을 원하는 형태의 DataFrame으로 변경 시켜줍니다."""
@@ -186,7 +192,8 @@ def make_output(logits):
 
     output = pd.DataFrame({"id": 0, "pred_label": pred_a, "probs": prob})
     output["id"] = range(0, len(output))
-    output.to_csv("./submission.csv", index=False)
+    output.to_csv(f"./results/{time_now}submission.csv", index=False)
+
 
 def show_result(result):
     f1 = 0
@@ -204,6 +211,7 @@ def show_result(result):
     print(f"Average F1 score : {f1/5:.2f}")
     print(f"Average AUPRC score : {au/5:.2f}")
     print("----------------------")
+
 
 def show_result(result):
     f1 = 0
@@ -226,7 +234,7 @@ def show_result(result):
 # loss funcion
 # https://discuss.pytorch.org/t/is-this-a-correct-implementation-for-focal-loss-in-pytorch/43327/8
 class FocalLoss(nn.Module):
-    def __init__(self, weight=None, gamma=2.0, reduction="mean"):
+    def __init__(self, weight=None, gamma=0.5, reduction="mean"):
         nn.Module.__init__(self)
         self.weight = weight
         self.gamma = gamma

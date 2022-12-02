@@ -1,8 +1,8 @@
+import warnings
+
 from importlib import import_module
 
 import numpy as np
-import warnings
-
 import pytorch_lightning as pl
 import torch
 import transformers
@@ -86,12 +86,13 @@ class Model(pl.LightningModule):
         self.log("test_f1", f1)
 
         return {"logits": logits, "y": y}
-# predict 추가
+
+    # predict 추가
     def predict_step(self, batch, batch_idx):
         x = batch
         logits = self(x)
 
-        return logits.squeeze(), 
+        return (logits.squeeze(),)
 
     def test_epoch_end(self, outputs):
         logits = torch.cat([x["logits"] for x in outputs])
@@ -111,11 +112,7 @@ class Model(pl.LightningModule):
     def configure_optimizers(self):
         opt_module = getattr(import_module("torch.optim"), self.optimizer_name)
         if self.lr_weight_decay:
-            optimizer = opt_module(
-                filter(lambda p: p.requires_grad, self.parameters()),
-                lr=self.lr,
-                weight_decay=0.01
-            )
+            optimizer = opt_module(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr, weight_decay=0.01)
         else:
             optimizer = opt_module(
                 filter(lambda p: p.requires_grad, self.parameters()),
@@ -123,7 +120,7 @@ class Model(pl.LightningModule):
                 # weight_decay=5e-4
             )
         if self.lr_sch_use:
-            t_total = 2030 * 7 # train_dataloader len, epochs
+            t_total = 2030 * 7  # train_dataloader len, epochs
             warmup_step = int(t_total * 0.1)
 
             _scheduler_dic = {
@@ -131,10 +128,12 @@ class Model(pl.LightningModule):
                 "ReduceLROnPlateau": torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10),
                 "CosineAnnealingLR": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2, eta_min=0.0),
                 "constant_warmup": transformers.get_constant_schedule_with_warmup(optimizer, 100),
-                "cosine_warmup" : transformers.get_cosine_schedule_with_warmup(optimizer,num_warmup_steps=10, num_training_steps=t_total)
+                "cosine_warmup": transformers.get_cosine_schedule_with_warmup(
+                    optimizer, num_warmup_steps=10, num_training_steps=t_total
+                ),
             }
             scheduler = _scheduler_dic[self.scheduler_name]
-            
+
             return [optimizer], [scheduler]
         else:
             return optimizer

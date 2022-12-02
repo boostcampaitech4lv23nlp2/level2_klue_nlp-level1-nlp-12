@@ -1,5 +1,7 @@
 import argparse
 
+from datetime import datetime, timedelta
+
 from data_n import *
 from model import *
 from omegaconf import OmegaConf
@@ -12,7 +14,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default="base_config")
     args, _ = parser.parse_known_args()
 
-    cfg = OmegaConf.load(f"/opt/ml/code/pl/config/{args.config}.yaml")
+    cfg = OmegaConf.load(f"/opt/ml/code/level2_klue_nlp-level1-nlp-12/pl/config/{args.config}.yaml")
 
     pl.seed_everything(cfg.train.seed, workers=True)
 
@@ -26,8 +28,8 @@ if __name__ == "__main__":
         cfg.train.seed,
     )
 
-    ckpt_path = "/opt/ml/code/pl/checkpoint/snunlp_KR-ELECTRA-discriminator/epoch=2-step=1218.ckpt"
-    pt_path = "/opt/ml/code/pl/output/snunlp_KR-ELECTRA-discriminator_11300045_model.pt"
+    # ckpt_path = "/opt/ml/code/pl/checkpoint/snunlp_KR-ELECTRA-discriminator/epoch=2-step=1218.ckpt"
+    pt_path = "/opt/ml/code/level2_klue_nlp-level1-nlp-12/pl/output/snunlp_KR-ELECTRA-discriminator_11302331_model.pt"
 
     # for checkpoint
     # model = Model(cfg).load_from_checkpoint(checkpoint_path=ckpt_path)

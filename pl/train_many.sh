@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIGS=("electra_ce_origin" "electra_label_origin" "electra_ce_yong" "electra_label_yong")
+CONFIGS=("electra_focal05_origin_focal")
 
 config_length=${#CONFIGS[@]}
 
