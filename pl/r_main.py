@@ -53,11 +53,11 @@ if __name__ == "__main__":
 
     # Checkpoint
     checkpoint_callback = ModelCheckpoint(
-        dirpath=ck_dir_path, filename="{epoch}_{val_loss:.4f}", monitor="val_loss", save_top_k=1, mode="min"
+        dirpath=ck_dir_path, filename="{epoch}_{val_loss:.4f}", monitor="val_f1", save_top_k=1, mode="max"
     )
 
     # Earlystopping
-    earlystopping = EarlyStopping(monitor="val_loss", patience=3, mode="min")
+    earlystopping = EarlyStopping(monitor="val_f1", patience=3, mode="max")
 
     # dataloader와 model을 생성합니다.
     dataloader = Dataloader(

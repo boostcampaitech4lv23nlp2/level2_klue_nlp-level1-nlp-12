@@ -1,5 +1,5 @@
 path:
-    train_path: ../../dataset/train/train.csv
+    train_path: /opt/ml/dataset/train/multi_label_aug_com.csv
     test_path: ../../dataset/test/test_data.csv
 
 data:
@@ -8,17 +8,17 @@ data:
     
 model:
     model_name: klue/roberta-large
-    saved_name: r_roberta
+    saved_name: roberta_y_CrossEntropy
 
 train:
     seed: 42
     gpus: 1
     batch_size: 16
     max_epoch: 10
-    learning_rate: 1.3182567385564076e-05
+    learning_rate: 2.1216154368926846e-5
     logging_step: 10
     nums_folds: 5
-    loss_name: focal # CrossEntropy, focal, label_smoothing, f1
+    loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
     lr_sch_use: True
     lr_decay_step: 20

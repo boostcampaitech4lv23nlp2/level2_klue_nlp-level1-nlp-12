@@ -6,6 +6,9 @@ import warnings
 from datetime import datetime, timedelta
 
 import wandb
+import torch
+import torch.nn as nn
+import numpy as np
 
 from data import *
 from model import *
@@ -82,7 +85,6 @@ if __name__ == "__main__":
         )
 
         trainer = pl.Trainer(
-            precision=16,
             accelerator="gpu",
             devices=1,
             max_epochs=cfg.train.max_epoch,
@@ -90,25 +92,37 @@ if __name__ == "__main__":
             logger=wandb_logger,
             callbacks=[checkpoint_callback, earlystopping, RichProgressBar()],
             deterministic=True,
-            # limit_train_batches=0.05,
+            limit_train_batches=0.005,
         )
         trainer.fit(model=model, datamodule=datamodule)
         score = trainer.test(model=model, datamodule=datamodule, ckpt_path="best")
 
-        logits = trainer.predict(model=model, datamodule=datamodule)
+        logits = trainer.predict(model=model, datamodule=datamodule, ckpt_path="best")
         logits = torch.cat([x for x in logits])
         prob = F.softmax(logits, dim=-1).tolist()
 
         probs.extend(prob)
         result.extend(score)
-
+    
     # Fold 적용 결과 확인
     show_result(result)
 
-    # 학습이 완료된 모델을 저장합니다.
-    output_dir_path = "/opt/ml/code/pl/output"
-    if not os.path.exists(output_dir_path):
-        os.makedirs(output_dir_path)
+    fold_f1 = nn.Softmax()(torch.tensor([x["test_f1"] for x in result]))
+    for i,(f1,prob) in enumerate(zip(fold_f1,probs)):
+        probs[i] = np.array(prob) * float(f1)
 
-    output_path = os.path.join(output_dir_path, f"{model_name_ch}_{time_now}_model.pt")
-    torch.save(model.state_dict(), output_path)
+    prob = [sum(x)/cfg.train.nums_folds for x in zip(*probs)]
+    pred = np.argmax(prob, axis=-1).tolist()
+
+    pred_a = num_to_label(pred)
+    output = pd.DataFrame({"id": 0, "pred_label": pred_a, "probs": prob})
+    output["id"] = range(0, len(output))
+    output.to_csv("./submission.csv", index=False)
+
+    # 학습이 완료된 모델을 저장합니다.
+    # output_dir_path = "/opt/ml/code/pl/output"
+    # if not os.path.exists(output_dir_path):
+    #     os.makedirs(output_dir_path)
+
+    # output_path = os.path.join(output_dir_path, f"{model_name_ch}_{time_now}_model.pt")
+    # torch.save(model.state_dict(), output_path)

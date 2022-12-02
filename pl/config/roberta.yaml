@@ -8,7 +8,7 @@ data:
     
 model:
     model_name: klue/roberta-large
-    saved_name: r_roberta
+    saved_name: roberta_label
 
 train:
     seed: 42
@@ -18,7 +18,7 @@ train:
     learning_rate: 2.1216154368926846e-5
     logging_step: 10
     nums_folds: 5
-    loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
+    loss_name: label_smoothing # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
     lr_sch_use: True
     lr_decay_step: 20

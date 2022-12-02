@@ -210,7 +210,7 @@ def show_result(result):
 # loss funcion
 # https://discuss.pytorch.org/t/is-this-a-correct-implementation-for-focal-loss-in-pytorch/43327/8
 class FocalLoss(nn.Module):
-    def __init__(self, weight=None, gamma=2.0, reduction="mean"):
+    def __init__(self, weight=None, gamma=0.5, reduction="mean"):
         nn.Module.__init__(self)
         self.weight = weight
         self.gamma = gamma
