@@ -1,31 +1,31 @@
 path:
-    train_path: ../../dataset/train/aug_kjk.csv       # 추가 데이터
+    train_path: ../../dataset/train/train.csv 
     test_path: ../../dataset/test/test_data.csv
 
 data:
     shuffle: True
     augmentation: # adea, bt 등등
-
+    
 model:
     model_name: klue/roberta-large
-    saved_name: roberta-large/kjk
+    saved_name: r-roberta/
 
 train:
     seed: 42
     gpus: 1
     batch_size: 16
     max_epoch: 10
-    learning_rate: 2.1216154368926846e-5
+    learning_rate: 1.3182567385564076e-05
     logging_step: 10
     nums_folds: 5
-    loss_name: CrossEntropy # CrossEntropy, focal, label_smoothing, f1
+    loss_name: label_smoothing # CrossEntropy, focal, label_smoothing, f1
     optimizer_name: AdamW
-    lr_sch_use: True
+    lr_sch_use: False
     lr_decay_step: 20
     scheduler_name: cosine_warmup # StepLR, ReduceLROnPlateau, CosineAnnealingLR, constant_warmup, cosine_warmup
     lr_weight_decay: True
     
 wandb:
     wandb_username: dk100
-    wandb_project: lv2_personal_test
-    wandb_entity: dk100
+    wandb_project: huggingface
+    wandb_entity: re_et
